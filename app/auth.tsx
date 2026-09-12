@@ -111,6 +111,11 @@ export default function AuthScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
+          <View style={styles.logoContainer}>
+            <View style={styles.logoCircle}>
+              <Ionicons name="pulse" size={40} color="white" />
+            </View>
+          </View>
           <Text style={styles.appName}>Nonono</Text>
           <Text style={styles.tagline}>Recovery Starts Here</Text>
 
@@ -230,28 +235,47 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 30,
+    borderRadius: 24,
+    padding: 35,
     width: '100%',
     maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowColor: '#4A90D9',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#4A90D9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#4A90D9',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
     shadowRadius: 10,
-    elevation: 5,
+    elevation: 8,
   },
   appName: {
-    fontSize: 36,
-    fontWeight: 'bold',
+    fontSize: 42,
+    fontWeight: '800',
     color: '#4A90D9',
     textAlign: 'center',
-    marginBottom: 5,
+    marginBottom: 8,
+    letterSpacing: 2,
   },
   tagline: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#888',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 35,
+    fontStyle: 'italic',
   },
   title: {
     fontSize: 20,
