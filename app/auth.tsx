@@ -19,6 +19,8 @@ export default function AuthScreen() {
   const { isSetupComplete, isAuthenticated, setupPassword, login, loginWithBiometric, settings } = useAuthStore();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState('');
   const [showRecoveryCode, setShowRecoveryCode] = useState(false);
   const [isSetup, setIsSetup] = useState(false);
@@ -111,20 +113,36 @@ export default function AuthScreen() {
           {!isSetupComplete ? (
             <>
               <Text style={styles.title}>Buat Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Masukkan password"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Konfirmasi password"
-                secureTextEntry
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-              />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Masukkan password"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Text style={styles.eyeText}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Konfirmasi password"
+                  secureTextEntry={!showConfirmPassword}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <Text style={styles.eyeText}>{showConfirmPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity style={styles.button} onPress={handleSetup}>
                 <Text style={styles.buttonText}>Buat Password</Text>
               </TouchableOpacity>
@@ -132,13 +150,21 @@ export default function AuthScreen() {
           ) : (
             <>
               <Text style={styles.title}>Masuk</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Masukkan password"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-              />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Masukkan password"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Text style={styles.eyeText}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity style={styles.button} onPress={handleLogin}>
                 <Text style={styles.buttonText}>Masuk</Text>
               </TouchableOpacity>
@@ -216,6 +242,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 15,
     backgroundColor: '#F9F9F9',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 10,
+    marginBottom: 15,
+    backgroundColor: '#F9F9F9',
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 15,
+    fontSize: 16,
+  },
+  eyeButton: {
+    padding: 15,
+  },
+  eyeText: {
+    fontSize: 18,
   },
   button: {
     backgroundColor: '#4A90D9',
