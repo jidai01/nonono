@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../src/stores/authStore';
 import * as LocalAuth from 'expo-local-authentication';
 
@@ -125,7 +126,11 @@ export default function AuthScreen() {
                   style={styles.eyeButton}
                   onPress={() => setShowPassword(!showPassword)}
                 >
-                  <Text style={styles.eyeText}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                  <Ionicons
+                    name={showPassword ? 'eye' : 'eye-off'}
+                    size={24}
+                    color="#888"
+                  />
                 </TouchableOpacity>
               </View>
               <View style={styles.passwordContainer}>
@@ -140,7 +145,11 @@ export default function AuthScreen() {
                   style={styles.eyeButton}
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
-                  <Text style={styles.eyeText}>{showConfirmPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                  <Ionicons
+                    name={showConfirmPassword ? 'eye' : 'eye-off'}
+                    size={24}
+                    color="#888"
+                  />
                 </TouchableOpacity>
               </View>
               <TouchableOpacity style={styles.button} onPress={handleSetup}>
@@ -162,7 +171,11 @@ export default function AuthScreen() {
                   style={styles.eyeButton}
                   onPress={() => setShowPassword(!showPassword)}
                 >
-                  <Text style={styles.eyeText}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                  <Ionicons
+                    name={showPassword ? 'eye' : 'eye-off'}
+                    size={24}
+                    color="#888"
+                  />
                 </TouchableOpacity>
               </View>
               <TouchableOpacity style={styles.button} onPress={handleLogin}>
@@ -259,9 +272,6 @@ const styles = StyleSheet.create({
   },
   eyeButton: {
     padding: 15,
-  },
-  eyeText: {
-    fontSize: 18,
   },
   button: {
     backgroundColor: '#4A90D9',
