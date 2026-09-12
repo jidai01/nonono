@@ -94,30 +94,39 @@ export async function deleteActivity(id: string): Promise<void> {
 export async function getAllSchedules(): Promise<Schedule[]> {
   const db = await getDatabase();
   return db.getAllAsync<Schedule>(
-    'SELECT * FROM schedules ORDER BY day_of_week, time'
+    'SELECT * FROM schedules ORDER BY date, time'
   );
 }
 
-export async function getSchedulesByDay(dayOfWeek: number): Promise<Schedule[]> {
+export async function getSchedulesByDate(date: string): Promise<Schedule[]> {
   const db = await getDatabase();
   return db.getAllAsync<Schedule>(
-    'SELECT * FROM schedules WHERE day_of_week = ? AND is_active = 1 ORDER BY time',
-    [dayOfWeek]
+    'SELECT * FROM schedules WHERE date = ? AND is_active = 1 ORDER BY time',
+    [date]
+  );
+}
+
+export async function getUpcomingSchedules(): Promise<Schedule[]> {
+  const db = await getDatabase();
+  const today = new Date().toISOString().split('T')[0];
+  return db.getAllAsync<Schedule>(
+    'SELECT * FROM schedules WHERE date >= ? AND is_active = 1 ORDER BY date, time',
+    [today]
   );
 }
 
 export async function upsertSchedule(schedule: Omit<Schedule, 'created_at'>): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    `INSERT INTO schedules (id, title, description, day_of_week, time, is_active)
+    `INSERT INTO schedules (id, title, description, date, time, is_active)
      VALUES (?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        title = excluded.title,
        description = excluded.description,
-       day_of_week = excluded.day_of_week,
+       date = excluded.date,
        time = excluded.time,
        is_active = excluded.is_active`,
-    [schedule.id, schedule.title, schedule.description, schedule.day_of_week, schedule.time, schedule.is_active ? 1 : 0]
+    [schedule.id, schedule.title, schedule.description, schedule.date, schedule.time, schedule.is_active ? 1 : 0]
   );
 }
 

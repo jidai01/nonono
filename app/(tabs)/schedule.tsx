@@ -2,22 +2,32 @@ import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Switch, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Calendar, DateData } from 'react-native-calendars';
 import { useScheduleStore } from '../../src/stores/scheduleStore';
-import { DAY_NAMES, Schedule } from '../../src/types';
+import { Schedule } from '../../src/types';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function ScheduleScreen() {
   const router = useRouter();
   const { schedules, loadSchedules, toggleSchedule, deleteSchedule } = useScheduleStore();
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
     loadSchedules();
   }, []);
 
-  const filteredSchedules = selectedDay !== null
-    ? schedules.filter(s => s.day_of_week === selectedDay)
-    : schedules;
+  const filteredSchedules = schedules.filter(s => s.date === selectedDate);
+
+  const markedDates = schedules.reduce((acc, schedule) => {
+    acc[schedule.date] = {
+      marked: true,
+      dotColor: schedule.is_active ? Colors.primary : Colors.textTertiary,
+      selected: schedule.date === selectedDate,
+      selectedColor: Colors.primary,
+    };
+    return acc;
+  }, {} as Record<string, any>);
 
   const handleDeleteSchedule = (id: string) => {
     Alert.alert(
@@ -30,6 +40,26 @@ export default function ScheduleScreen() {
     );
   };
 
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selected = new Date(dateStr + 'T00:00:00');
+    selected.setHours(0, 0, 0, 0);
+
+    const diffDays = Math.floor((selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tomorrow';
+    if (diffDays === -1) return 'Yesterday';
+
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   const renderSchedule = ({ item }: { item: Schedule }) => (
     <View style={[styles.scheduleCard, !item.is_active && styles.scheduleCardInactive]}>
       <View style={styles.scheduleHeader}>
@@ -39,7 +69,6 @@ export default function ScheduleScreen() {
         <View style={styles.scheduleInfo}>
           <Text style={styles.scheduleTitle}>{item.title}</Text>
           <Text style={styles.scheduleTime}>{item.time}</Text>
-          <Text style={styles.scheduleDay}>{DAY_NAMES[item.day_of_week]}</Text>
         </View>
         <Switch
           value={item.is_active}
@@ -63,32 +92,53 @@ export default function ScheduleScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Day Selector */}
-      <View style={styles.daySelectorContainer}>
-        <FlatList
-          data={DAY_NAMES}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.daySelector}
-          keyExtractor={(item, index) => item}
-          renderItem={({ item, index }) => (
-            <TouchableOpacity
-              style={[
-                styles.dayButton,
-                selectedDay === index && styles.dayButtonSelected,
-              ]}
-              onPress={() => setSelectedDay(selectedDay === index ? null : index)}
-            >
-              <Text style={[
-                styles.dayText,
-                selectedDay === index && styles.dayTextSelected,
-              ]}>
-                {item.substring(0, 3)}
-              </Text>
-            </TouchableOpacity>
-          )}
-        />
+      {/* Date Selector */}
+      <View style={styles.dateSelectorContainer}>
+        <TouchableOpacity
+          style={styles.dateSelector}
+          onPress={() => setShowCalendar(!showCalendar)}
+        >
+          <Ionicons name="calendar" size={20} color={Colors.primary} />
+          <View style={styles.dateInfo}>
+            <Text style={styles.dateLabel}>{formatDate(selectedDate)}</Text>
+            <Text style={styles.dateValue}>{selectedDate}</Text>
+          </View>
+          <Ionicons
+            name={showCalendar ? 'chevron-up' : 'chevron-down'}
+            size={20}
+            color={Colors.textTertiary}
+          />
+        </TouchableOpacity>
       </View>
+
+      {/* Calendar */}
+      {showCalendar && (
+        <View style={styles.calendarContainer}>
+          <Calendar
+            markedDates={markedDates}
+            onDayPress={(day: DateData) => {
+              setSelectedDate(day.dateString);
+              setShowCalendar(false);
+            }}
+            theme={{
+              backgroundColor: Colors.surface,
+              calendarBackground: Colors.surface,
+              textSectionTitleColor: Colors.textTertiary,
+              selectedDayBackgroundColor: Colors.primary,
+              selectedDayTextColor: Colors.textInverse,
+              todayTextColor: Colors.primary,
+              dayTextColor: Colors.textPrimary,
+              textDisabledColor: Colors.border,
+              monthTextColor: Colors.textPrimary,
+              arrowColor: Colors.primary,
+              textMonthFontWeight: Typography.weights.semibold,
+              textDayFontSize: Typography.sizes.md,
+              textMonthFontSize: Typography.sizes.lg,
+            }}
+            style={styles.calendar}
+          />
+        </View>
+      )}
 
       {/* Schedules List */}
       {filteredSchedules.length === 0 ? (
@@ -97,7 +147,7 @@ export default function ScheduleScreen() {
             <Ionicons name="alarm-outline" size={48} color={Colors.primary} />
           </View>
           <Text style={styles.emptyTitle}>No Schedules</Text>
-          <Text style={styles.emptySubtitle}>Create reminders for your prevention activities</Text>
+          <Text style={styles.emptySubtitle}>Create reminders for this date</Text>
         </View>
       ) : (
         <FlatList
@@ -126,34 +176,42 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  daySelectorContainer: {
+  dateSelectorContainer: {
     backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     ...Shadows.small,
   },
-  daySelector: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
-  },
-  dayButton: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.sm,
+  dateSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    gap: Spacing.md,
   },
-  dayButtonSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+  dateInfo: {
+    flex: 1,
   },
-  dayText: {
+  dateLabel: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+  },
+  dateValue: {
     fontSize: Typography.sizes.sm,
-    fontWeight: Typography.weights.medium,
-    color: Colors.textSecondary,
+    color: Colors.textTertiary,
   },
-  dayTextSelected: {
-    color: Colors.textInverse,
+  calendarContainer: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    ...Shadows.small,
+  },
+  calendar: {
+    borderRadius: BorderRadius.lg,
   },
   listContent: {
     padding: Spacing.lg,
@@ -195,11 +253,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.sm,
     color: Colors.primary,
     fontWeight: Typography.weights.medium,
-  },
-  scheduleDay: {
-    fontSize: Typography.sizes.xs,
-    color: Colors.textTertiary,
-    marginTop: 2,
   },
   scheduleDescription: {
     fontSize: Typography.sizes.sm,

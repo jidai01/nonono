@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Calendar } from 'react-native-calendars';
 import { useScheduleStore } from '../../src/stores/scheduleStore';
-import { DAY_NAMES } from '../../src/types';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function NewScheduleScreen() {
@@ -22,8 +22,9 @@ export default function NewScheduleScreen() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [time, setTime] = useState('09:00');
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -34,12 +35,22 @@ export default function NewScheduleScreen() {
     await addSchedule({
       title: title.trim(),
       description: description.trim(),
-      day_of_week: selectedDay,
+      date: selectedDate,
       time,
       is_active: true,
     });
 
     router.dismiss();
+  };
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   };
 
   return (
@@ -49,7 +60,7 @@ export default function NewScheduleScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+        <TouchableOpacity onPress={() => router.dismiss()} style={styles.closeButton}>
           <Ionicons name="close" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>New Schedule</Text>
@@ -88,22 +99,54 @@ export default function NewScheduleScreen() {
           />
         </View>
 
-        {/* Day Section */}
+        {/* Date Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Day</Text>
-          <View style={styles.dayContainer}>
-            {DAY_NAMES.map((day, index) => (
-              <TouchableOpacity
-                key={day}
-                style={[styles.dayButton, selectedDay === index && styles.dayButtonSelected]}
-                onPress={() => setSelectedDay(index)}
-              >
-                <Text style={[styles.dayText, selectedDay === index && styles.dayTextSelected]}>
-                  {day.substring(0, 3)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <Text style={styles.sectionTitle}>Date</Text>
+          <TouchableOpacity
+            style={styles.dateSelector}
+            onPress={() => setShowCalendar(!showCalendar)}
+          >
+            <Ionicons name="calendar" size={18} color={Colors.primary} />
+            <Text style={styles.dateText}>{formatDate(selectedDate)}</Text>
+            <Ionicons
+              name={showCalendar ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={Colors.textTertiary}
+            />
+          </TouchableOpacity>
+
+          {showCalendar && (
+            <View style={styles.calendarContainer}>
+              <Calendar
+                markedDates={{
+                  [selectedDate]: {
+                    selected: true,
+                    selectedColor: Colors.primary,
+                  },
+                }}
+                onDayPress={(day) => {
+                  setSelectedDate(day.dateString);
+                  setShowCalendar(false);
+                }}
+                theme={{
+                  backgroundColor: Colors.surface,
+                  calendarBackground: Colors.surface,
+                  textSectionTitleColor: Colors.textTertiary,
+                  selectedDayBackgroundColor: Colors.primary,
+                  selectedDayTextColor: Colors.textInverse,
+                  todayTextColor: Colors.primary,
+                  dayTextColor: Colors.textPrimary,
+                  textDisabledColor: Colors.border,
+                  monthTextColor: Colors.textPrimary,
+                  arrowColor: Colors.primary,
+                  textMonthFontWeight: Typography.weights.semibold,
+                  textDayFontSize: Typography.sizes.md,
+                  textMonthFontSize: Typography.sizes.lg,
+                }}
+                style={styles.calendar}
+              />
+            </View>
+          )}
         </View>
 
         {/* Time Section */}
@@ -203,30 +246,30 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     ...Shadows.small,
   },
-  dayContainer: {
+  dateSelector: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  dayButton: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.sm,
+    alignItems: 'center',
     backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
+    gap: Spacing.md,
     ...Shadows.small,
   },
-  dayButtonSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  dayText: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
+  dateText: {
+    flex: 1,
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
     fontWeight: Typography.weights.medium,
   },
-  dayTextSelected: {
-    color: Colors.textInverse,
+  calendarContainer: {
+    marginTop: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    ...Shadows.small,
+  },
+  calendar: {
+    borderRadius: BorderRadius.lg,
   },
 });

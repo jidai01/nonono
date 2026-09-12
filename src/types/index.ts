@@ -31,7 +31,7 @@ export interface Schedule {
   id: string;
   title: string;
   description: string;
-  day_of_week: number;
+  date: string;
   time: string;
   is_active: boolean;
   created_at: string;

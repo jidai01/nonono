@@ -48,7 +48,7 @@ async function initDatabase(database: SQLite.SQLiteDatabase) {
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
       description TEXT DEFAULT '',
-      day_of_week INTEGER NOT NULL,
+      date TEXT NOT NULL,
       time TEXT NOT NULL,
       is_active INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -56,6 +56,6 @@ async function initDatabase(database: SQLite.SQLiteDatabase) {
 
     CREATE INDEX IF NOT EXISTS idx_journal_date ON journal_entries(date);
     CREATE INDEX IF NOT EXISTS idx_activities_entry ON activities(entry_id);
-    CREATE INDEX IF NOT EXISTS idx_schedules_day ON schedules(day_of_week);
+    CREATE INDEX IF NOT EXISTS idx_schedules_date ON schedules(date);
   `);
 }
