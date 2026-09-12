@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '../src/stores/authStore';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { Colors } from '../src/types/theme';
 
 export default function RootLayout() {
   const { init, loading } = useAuthStore();
@@ -14,7 +15,7 @@ export default function RootLayout() {
   if (loading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#3D8B8B" />
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
@@ -22,15 +23,7 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="auth" />
-        <Stack.Screen name="test-routes" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="entry/new" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="entry/[id]" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="schedule/new" options={{ presentation: 'modal' }} />
-      </Stack>
+      <Stack screenOptions={{ headerShown: false, animation: 'slide_from_bottom' }} />
     </>
   );
 }
@@ -40,6 +33,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F4F7F6',
+    backgroundColor: Colors.background,
   },
 });
