@@ -11,8 +11,10 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useJournalStore } from '../../src/stores/journalStore';
 import { MOOD_EMOJIS, MOOD_LABELS, MoodLevel, PREDEFINED_ACTIVITIES } from '../../src/types';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 import * as Crypto from 'expo-crypto';
 
 export default function NewEntryScreen() {
@@ -54,7 +56,6 @@ export default function NewEntryScreen() {
       relapse_notes: isRelapse ? relapseNotes : '',
     });
 
-    // Add selected activities
     for (const activityName of selectedActivities) {
       await addActivity({
         entry_id: entryId,
@@ -89,40 +90,70 @@ export default function NewEntryScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.dateText}>{entryDate}</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+          <Ionicons name="close" size={24} color={Colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>New Entry</Text>
+        <TouchableOpacity onPress={handleSave} style={styles.saveHeaderButton}>
+          <Text style={styles.saveHeaderButtonText}>Save</Text>
+        </TouchableOpacity>
+      </View>
 
-        <Text style={styles.sectionTitle}>How are you feeling today?</Text>
-        <View style={styles.moodContainer}>
-          {[1, 2, 3, 4, 5].map((level) => (
-            <TouchableOpacity
-              key={level}
-              style={[styles.moodButton, mood === level && styles.moodButtonSelected]}
-              onPress={() => setMood(level as MoodLevel)}
-            >
-              <Text style={styles.moodEmoji}>{MOOD_EMOJIS[level as MoodLevel]}</Text>
-              <Text style={styles.moodLabel}>{MOOD_LABELS[level as MoodLevel]}</Text>
-            </TouchableOpacity>
-          ))}
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Date */}
+        <View style={styles.dateContainer}>
+          <Ionicons name="calendar" size={16} color={Colors.primary} />
+          <Text style={styles.dateText}>{entryDate}</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Write your daily journal</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="Tell me about your feelings today..."
-          multiline
-          textAlignVertical="top"
-          value={feelings}
-          onChangeText={setFeelings}
-        />
+        {/* Mood Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>How are you feeling today?</Text>
+          <View style={styles.moodContainer}>
+            {[1, 2, 3, 4, 5].map((level) => (
+              <TouchableOpacity
+                key={level}
+                style={[styles.moodButton, mood === level && styles.moodButtonSelected]}
+                onPress={() => setMood(level as MoodLevel)}
+              >
+                <Text style={styles.moodEmoji}>{MOOD_EMOJIS[level as MoodLevel]}</Text>
+                <Text style={[styles.moodLabel, mood === level && styles.moodLabelSelected]}>
+                  {MOOD_LABELS[level as MoodLevel]}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
-        <View style={styles.relapseContainer}>
+        {/* Journal Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Write your daily journal</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Tell me about your feelings today..."
+            placeholderTextColor={Colors.textTertiary}
+            multiline
+            textAlignVertical="top"
+            value={feelings}
+            onChangeText={setFeelings}
+          />
+        </View>
+
+        {/* Relapse Section */}
+        <View style={styles.section}>
           <View style={styles.relapseHeader}>
             <Text style={styles.sectionTitle}>Did you experience a relapse today?</Text>
             <TouchableOpacity
               style={[styles.toggleButton, isRelapse && styles.toggleButtonActive]}
               onPress={() => setIsRelapse(!isRelapse)}
             >
+              <Ionicons
+                name={isRelapse ? 'checkmark-circle' : 'ellipse-outline'}
+                size={18}
+                color={isRelapse ? Colors.textInverse : Colors.textTertiary}
+              />
               <Text style={[styles.toggleText, isRelapse && styles.toggleTextActive]}>
                 {isRelapse ? 'Yes' : 'No'}
               </Text>
@@ -133,6 +164,7 @@ export default function NewEntryScreen() {
             <TextInput
               style={[styles.textArea, styles.relapseInput]}
               placeholder="Tell me what happened..."
+              placeholderTextColor={Colors.textTertiary}
               multiline
               textAlignVertical="top"
               value={relapseNotes}
@@ -141,43 +173,43 @@ export default function NewEntryScreen() {
           )}
         </View>
 
-        <Text style={styles.sectionTitle}>Prevention activities done</Text>
-        <View style={styles.activitiesGrid}>
-          {PREDEFINED_ACTIVITIES.map((activity) => (
-            <TouchableOpacity
-              key={activity}
-              style={[
-                styles.activityChip,
-                selectedActivities.includes(activity) && styles.activityChipSelected,
-              ]}
-              onPress={() => toggleActivity(activity)}
-            >
-              <Text
+        {/* Activities Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Prevention activities done</Text>
+          <View style={styles.activitiesGrid}>
+            {PREDEFINED_ACTIVITIES.map((activity) => (
+              <TouchableOpacity
+                key={activity}
                 style={[
-                  styles.activityChipText,
-                  selectedActivities.includes(activity) && styles.activityChipTextSelected,
+                  styles.activityChip,
+                  selectedActivities.includes(activity) && styles.activityChipSelected,
                 ]}
+                onPress={() => toggleActivity(activity)}
               >
-                {activity}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+                <Ionicons
+                  name={selectedActivities.includes(activity) ? 'checkmark' : 'add'}
+                  size={14}
+                  color={selectedActivities.includes(activity) ? Colors.textInverse : Colors.primary}
+                />
+                <Text
+                  style={[
+                    styles.activityChipText,
+                    selectedActivities.includes(activity) && styles.activityChipTextSelected,
+                  ]}
+                >
+                  {activity}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Or enter custom activity..."
-          value={customActivity}
-          onChangeText={setCustomActivity}
-        />
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Save</Text>
-          </TouchableOpacity>
+          <TextInput
+            style={styles.customInput}
+            placeholder="Or enter custom activity..."
+            placeholderTextColor={Colors.textTertiary}
+            value={customActivity}
+            onChangeText={setCustomActivity}
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -187,61 +219,103 @@ export default function NewEntryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: Colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  closeButton: {
+    padding: Spacing.xs,
+  },
+  headerTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+  },
+  saveHeaderButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+  },
+  saveHeaderButtonText: {
+    color: Colors.textInverse,
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
   },
   content: {
-    padding: 20,
+    padding: Spacing.lg,
+    paddingBottom: 100,
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xl,
   },
   dateText: {
-    fontSize: 16,
-    color: '#888',
-    textAlign: 'center',
-    marginBottom: 20,
+    fontSize: Typography.sizes.md,
+    color: Colors.primary,
+    fontWeight: Typography.weights.medium,
+  },
+  section: {
+    marginBottom: Spacing.xl,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
   },
   moodContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 25,
+    gap: Spacing.sm,
   },
   moodButton: {
     alignItems: 'center',
-    padding: 10,
-    borderRadius: 12,
-    backgroundColor: 'white',
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.surface,
     borderWidth: 2,
-    borderColor: '#EEE',
-    minWidth: 60,
+    borderColor: Colors.border,
+    ...Shadows.small,
   },
   moodButtonSelected: {
-    borderColor: '#4A90D9',
-    backgroundColor: '#F0F7FF',
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary + '10',
   },
   moodEmoji: {
     fontSize: 28,
-    marginBottom: 5,
+    marginBottom: Spacing.xs,
   },
   moodLabel: {
-    fontSize: 10,
-    color: '#666',
+    fontSize: Typography.sizes.xs,
+    color: Colors.textTertiary,
+    fontWeight: Typography.weights.medium,
+  },
+  moodLabelSelected: {
+    color: Colors.primary,
   },
   textArea: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 15,
-    fontSize: 14,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
     minHeight: 120,
     borderWidth: 1,
-    borderColor: '#EEE',
-    marginBottom: 20,
-  },
-  relapseContainer: {
-    marginBottom: 20,
+    borderColor: Colors.border,
+    ...Shadows.small,
   },
   relapseHeader: {
     flexDirection: 'row',
@@ -249,87 +323,70 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toggleButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#F0F0F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   toggleButtonActive: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: Colors.error,
+    borderColor: Colors.error,
   },
   toggleText: {
-    color: '#666',
-    fontWeight: '600',
+    color: Colors.textTertiary,
+    fontWeight: Typography.weights.medium,
+    fontSize: Typography.sizes.sm,
   },
   toggleTextActive: {
-    color: 'white',
+    color: Colors.textInverse,
   },
   relapseInput: {
-    marginTop: 12,
-    borderColor: '#FF6B6B',
+    marginTop: Spacing.md,
+    borderColor: Colors.error + '50',
   },
   activitiesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 15,
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   activityChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'white',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: '#DDD',
+    borderColor: Colors.border,
+    ...Shadows.small,
   },
   activityChipSelected: {
-    backgroundColor: '#4A90D9',
-    borderColor: '#4A90D9',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   activityChipText: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    fontWeight: Typography.weights.medium,
   },
   activityChipTextSelected: {
-    color: 'white',
+    color: Colors.textInverse,
   },
-  input: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 15,
-    fontSize: 14,
+  customInput: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
     borderWidth: 1,
-    borderColor: '#EEE',
-    marginBottom: 20,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 10,
-  },
-  cancelButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 12,
-    padding: 15,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#666',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: '#4A90D9',
-    borderRadius: 12,
-    padding: 15,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+    borderColor: Colors.border,
+    ...Shadows.small,
   },
 });

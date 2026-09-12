@@ -11,8 +11,10 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useScheduleStore } from '../../src/stores/scheduleStore';
 import { DAY_NAMES } from '../../src/types';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function NewScheduleScreen() {
   const router = useRouter();
@@ -45,56 +47,79 @@ export default function NewScheduleScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.sectionTitle}>Schedule Title</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g., Morning Exercise"
-          value={title}
-          onChangeText={setTitle}
-        />
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+          <Ionicons name="close" size={24} color={Colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>New Schedule</Text>
+        <TouchableOpacity onPress={handleSave} style={styles.saveHeaderButton}>
+          <Text style={styles.saveHeaderButtonText}>Save</Text>
+        </TouchableOpacity>
+      </View>
 
-        <Text style={styles.sectionTitle}>Description (optional)</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Details about the activity..."
-          multiline
-          textAlignVertical="top"
-          value={description}
-          onChangeText={setDescription}
-        />
-
-        <Text style={styles.sectionTitle}>Hari</Text>
-        <View style={styles.dayContainer}>
-          {DAY_NAMES.map((day, index) => (
-            <TouchableOpacity
-              key={day}
-              style={[styles.dayButton, selectedDay === index && styles.dayButtonSelected]}
-              onPress={() => setSelectedDay(index)}
-            >
-              <Text style={[styles.dayText, selectedDay === index && styles.dayTextSelected]}>
-                {day.substring(0, 3)}
-              </Text>
-            </TouchableOpacity>
-          ))}
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Title Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Schedule Title</Text>
+          <View style={styles.inputContainer}>
+            <Ionicons name="pencil" size={18} color={Colors.textTertiary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., Morning Exercise"
+              placeholderTextColor={Colors.textTertiary}
+              value={title}
+              onChangeText={setTitle}
+            />
+          </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Time</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="HH:MM (e.g., 09:00)"
-          value={time}
-          onChangeText={setTime}
-          keyboardType="numbers-and-punctuation"
-        />
+        {/* Description Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Description (optional)</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Details about the activity..."
+            placeholderTextColor={Colors.textTertiary}
+            multiline
+            textAlignVertical="top"
+            value={description}
+            onChangeText={setDescription}
+          />
+        </View>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Save</Text>
-          </TouchableOpacity>
+        {/* Day Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Day</Text>
+          <View style={styles.dayContainer}>
+            {DAY_NAMES.map((day, index) => (
+              <TouchableOpacity
+                key={day}
+                style={[styles.dayButton, selectedDay === index && styles.dayButtonSelected]}
+                onPress={() => setSelectedDay(index)}
+              >
+                <Text style={[styles.dayText, selectedDay === index && styles.dayTextSelected]}>
+                  {day.substring(0, 3)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Time Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Time</Text>
+          <View style={styles.inputContainer}>
+            <Ionicons name="time" size={18} color={Colors.textTertiary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="HH:MM (e.g., 09:00)"
+              placeholderTextColor={Colors.textTertiary}
+              value={time}
+              onChangeText={setTime}
+              keyboardType="numbers-and-punctuation"
+            />
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -104,84 +129,104 @@ export default function NewScheduleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: Colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  closeButton: {
+    padding: Spacing.xs,
+  },
+  headerTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+  },
+  saveHeaderButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+  },
+  saveHeaderButtonText: {
+    color: Colors.textInverse,
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
   },
   content: {
-    padding: 20,
+    padding: Spacing.lg,
+    paddingBottom: 100,
+  },
+  section: {
+    marginBottom: Spacing.xl,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
+  },
+  inputIcon: {
+    marginLeft: Spacing.md,
   },
   input: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 15,
-    fontSize: 14,
-    borderWidth: 1,
-    borderColor: '#EEE',
-    marginBottom: 20,
+    flex: 1,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
   },
   textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
+    minHeight: 100,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
   },
   dayContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 20,
+    gap: Spacing.sm,
   },
   dayButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: 'white',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: '#DDD',
+    borderColor: Colors.border,
+    ...Shadows.small,
   },
   dayButtonSelected: {
-    backgroundColor: '#4A90D9',
-    borderColor: '#4A90D9',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   dayText: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '600',
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    fontWeight: Typography.weights.medium,
   },
   dayTextSelected: {
-    color: 'white',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 10,
-  },
-  cancelButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 12,
-    padding: 15,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#666',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: '#4A90D9',
-    borderRadius: 12,
-    padding: 15,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+    color: Colors.textInverse,
   },
 });
