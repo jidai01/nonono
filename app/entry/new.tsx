@@ -74,7 +74,7 @@ export default function NewEntryScreen() {
       });
     }
 
-    router.back();
+    router.dismiss();
   };
 
   const toggleActivity = (activity: string) => {
@@ -92,7 +92,7 @@ export default function NewEntryScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+        <TouchableOpacity onPress={() => router.dismiss()} style={styles.closeButton}>
           <Ionicons name="close" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>New Entry</Text>

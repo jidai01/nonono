@@ -84,7 +84,7 @@ export default function EditEntryScreen() {
       });
     }
 
-    router.back();
+    router.dismiss();
   };
 
   const handleDelete = () => {
@@ -101,7 +101,7 @@ export default function EditEntryScreen() {
               const { deleteEntry } = require('../../src/db/queries');
               await deleteEntry(currentEntry.id);
             }
-            router.back();
+            router.dismiss();
           },
         },
       ]

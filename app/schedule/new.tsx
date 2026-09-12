@@ -39,7 +39,7 @@ export default function NewScheduleScreen() {
       is_active: true,
     });
 
-    router.back();
+    router.dismiss();
   };
 
   return (
