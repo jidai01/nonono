@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Calendar } from 'react-native-calendars';
 import { useJournalStore } from '../../src/stores/journalStore';
 import { MOOD_EMOJIS, MOOD_LABELS, MoodLevel, PREDEFINED_ACTIVITIES } from '../../src/types';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
@@ -28,12 +29,12 @@ export default function NewEntryScreen() {
   const [relapseNotes, setRelapseNotes] = useState('');
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [customActivity, setCustomActivity] = useState('');
-
-  const entryDate = date || new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(date || new Date().toISOString().split('T')[0]);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
-    loadEntryByDate(entryDate);
-  }, [entryDate]);
+    loadEntryByDate(selectedDate);
+  }, [selectedDate]);
 
   useEffect(() => {
     if (currentEntry) {
@@ -49,7 +50,7 @@ export default function NewEntryScreen() {
 
     await saveEntry({
       id: entryId,
-      date: entryDate,
+      date: selectedDate,
       mood,
       feelings,
       is_relapse: isRelapse,
@@ -85,6 +86,16 @@ export default function NewEntryScreen() {
     );
   };
 
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -102,15 +113,59 @@ export default function NewEntryScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Date */}
-        <View style={styles.dateContainer}>
-          <Ionicons name="calendar" size={16} color={Colors.primary} />
-          <Text style={styles.dateText}>{entryDate}</Text>
+        {/* Date Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Date</Text>
+          <TouchableOpacity
+            style={styles.inputContainer}
+            onPress={() => setShowCalendar(!showCalendar)}
+          >
+            <Ionicons name="calendar" size={18} color={Colors.primary} style={styles.inputIcon} />
+            <Text style={styles.inputText}>{formatDate(selectedDate)}</Text>
+            <Ionicons
+              name={showCalendar ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={Colors.textTertiary}
+            />
+          </TouchableOpacity>
+
+          {showCalendar && (
+            <View style={styles.calendarContainer}>
+              <Calendar
+                markedDates={{
+                  [selectedDate]: {
+                    selected: true,
+                    selectedColor: Colors.primary,
+                  },
+                }}
+                onDayPress={(day) => {
+                  setSelectedDate(day.dateString);
+                  setShowCalendar(false);
+                }}
+                theme={{
+                  backgroundColor: Colors.surface,
+                  calendarBackground: Colors.surface,
+                  textSectionTitleColor: Colors.textTertiary,
+                  selectedDayBackgroundColor: Colors.primary,
+                  selectedDayTextColor: Colors.textInverse,
+                  todayTextColor: Colors.primary,
+                  dayTextColor: Colors.textPrimary,
+                  textDisabledColor: Colors.border,
+                  monthTextColor: Colors.textPrimary,
+                  arrowColor: Colors.primary,
+                  textMonthFontWeight: Typography.weights.semibold,
+                  textDayFontSize: Typography.sizes.md,
+                  textMonthFontSize: Typography.sizes.lg,
+                }}
+                style={styles.calendar}
+              />
+            </View>
+          )}
         </View>
 
         {/* Mood Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>How are you feeling today?</Text>
+          <Text style={styles.sectionTitle}>Mood</Text>
           <View style={styles.moodContainer}>
             {[1, 2, 3, 4, 5].map((level) => (
               <TouchableOpacity
@@ -129,22 +184,25 @@ export default function NewEntryScreen() {
 
         {/* Journal Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Write your daily journal</Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Tell me about your feelings today..."
-            placeholderTextColor={Colors.textTertiary}
-            multiline
-            textAlignVertical="top"
-            value={feelings}
-            onChangeText={setFeelings}
-          />
+          <Text style={styles.sectionTitle}>Journal</Text>
+          <View style={styles.inputContainerTextArea}>
+            <Ionicons name="pencil" size={18} color={Colors.textTertiary} style={styles.inputIconTop} />
+            <TextInput
+              style={styles.textArea}
+              placeholder="Tell me about your feelings today..."
+              placeholderTextColor={Colors.textTertiary}
+              multiline
+              textAlignVertical="top"
+              value={feelings}
+              onChangeText={setFeelings}
+            />
+          </View>
         </View>
 
         {/* Relapse Section */}
         <View style={styles.section}>
           <View style={styles.relapseHeader}>
-            <Text style={styles.sectionTitle}>Did you experience a relapse today?</Text>
+            <Text style={styles.sectionTitle}>Relapse</Text>
             <TouchableOpacity
               style={[styles.toggleButton, isRelapse && styles.toggleButtonActive]}
               onPress={() => setIsRelapse(!isRelapse)}
@@ -161,21 +219,24 @@ export default function NewEntryScreen() {
           </View>
 
           {isRelapse && (
-            <TextInput
-              style={[styles.textArea, styles.relapseInput]}
-              placeholder="Tell me what happened..."
-              placeholderTextColor={Colors.textTertiary}
-              multiline
-              textAlignVertical="top"
-              value={relapseNotes}
-              onChangeText={setRelapseNotes}
-            />
+            <View style={[styles.inputContainerTextArea, styles.relapseInputContainer]}>
+              <Ionicons name="alert-circle" size={18} color={Colors.error} style={styles.inputIconTop} />
+              <TextInput
+                style={styles.textArea}
+                placeholder="Tell me what happened..."
+                placeholderTextColor={Colors.textTertiary}
+                multiline
+                textAlignVertical="top"
+                value={relapseNotes}
+                onChangeText={setRelapseNotes}
+              />
+            </View>
           )}
         </View>
 
         {/* Activities Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Prevention activities done</Text>
+          <Text style={styles.sectionTitle}>Activities</Text>
           <View style={styles.activitiesGrid}>
             {PREDEFINED_ACTIVITIES.map((activity) => (
               <TouchableOpacity
@@ -203,13 +264,16 @@ export default function NewEntryScreen() {
             ))}
           </View>
 
-          <TextInput
-            style={styles.customInput}
-            placeholder="Or enter custom activity..."
-            placeholderTextColor={Colors.textTertiary}
-            value={customActivity}
-            onChangeText={setCustomActivity}
-          />
+          <View style={styles.inputContainer}>
+            <Ionicons name="create" size={18} color={Colors.textTertiary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Or enter custom activity..."
+              placeholderTextColor={Colors.textTertiary}
+              value={customActivity}
+              onChangeText={setCustomActivity}
+            />
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -254,18 +318,6 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     paddingBottom: 100,
   },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xl,
-  },
-  dateText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.primary,
-    fontWeight: Typography.weights.medium,
-  },
   section: {
     marginBottom: Spacing.xl,
   },
@@ -274,6 +326,59 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
     marginBottom: Spacing.md,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
+  },
+  inputContainerTextArea: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.small,
+  },
+  inputIcon: {
+    marginLeft: Spacing.md,
+  },
+  inputIconTop: {
+    marginLeft: Spacing.md,
+    marginTop: Spacing.md,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
+  },
+  inputText: {
+    flex: 1,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
+    fontWeight: Typography.weights.medium,
+  },
+  textArea: {
+    padding: Spacing.lg,
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
+    minHeight: 100,
+  },
+  calendarContainer: {
+    marginTop: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    ...Shadows.small,
+  },
+  calendar: {
+    borderRadius: BorderRadius.lg,
   },
   moodContainer: {
     flexDirection: 'row',
@@ -306,17 +411,6 @@ const styles = StyleSheet.create({
   moodLabelSelected: {
     color: Colors.primary,
   },
-  textArea: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
-    fontSize: Typography.sizes.md,
-    color: Colors.textPrimary,
-    minHeight: 120,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...Shadows.small,
-  },
   relapseHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -345,7 +439,7 @@ const styles = StyleSheet.create({
   toggleTextActive: {
     color: Colors.textInverse,
   },
-  relapseInput: {
+  relapseInputContainer: {
     marginTop: Spacing.md,
     borderColor: Colors.error + '50',
   },
@@ -378,15 +472,5 @@ const styles = StyleSheet.create({
   },
   activityChipTextSelected: {
     color: Colors.textInverse,
-  },
-  customInput: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
-    fontSize: Typography.sizes.md,
-    color: Colors.textPrimary,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...Shadows.small,
   },
 });
