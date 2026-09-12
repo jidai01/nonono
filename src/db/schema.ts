@@ -44,18 +44,69 @@ async function initDatabase(database: SQLite.SQLiteDatabase) {
       FOREIGN KEY (entry_id) REFERENCES journal_entries(id) ON DELETE CASCADE
     );
 
-    CREATE TABLE IF NOT EXISTS schedules (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      description TEXT DEFAULT '',
-      date TEXT NOT NULL,
-      time TEXT NOT NULL,
-      is_active INTEGER DEFAULT 1,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-
     CREATE INDEX IF NOT EXISTS idx_journal_date ON journal_entries(date);
     CREATE INDEX IF NOT EXISTS idx_activities_entry ON activities(entry_id);
-    CREATE INDEX IF NOT EXISTS idx_schedules_date ON schedules(date);
   `);
+
+  await migrateSchedules(database);
+}
+
+async function migrateSchedules(database: SQLite.SQLiteDatabase) {
+  try {
+    const tableInfo = await database.getFirstAsync<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='schedules'"
+    );
+
+    if (!tableInfo) {
+      await database.execAsync(`
+        CREATE TABLE schedules (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT DEFAULT '',
+          date TEXT NOT NULL,
+          time TEXT NOT NULL,
+          is_active INTEGER DEFAULT 1,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_schedules_date ON schedules(date);
+      `);
+      return;
+    }
+
+    const columns = await database.getAllAsync<{ name: string }>(
+      "PRAGMA table_info(schedules)"
+    );
+    const hasDateCol = columns.some(c => c.name === 'date');
+
+    if (!hasDateCol) {
+      await database.execAsync(`DROP TABLE IF EXISTS schedules`);
+      await database.execAsync(`
+        CREATE TABLE schedules (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT DEFAULT '',
+          date TEXT NOT NULL,
+          time TEXT NOT NULL,
+          is_active INTEGER DEFAULT 1,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_schedules_date ON schedules(date);
+      `);
+    }
+  } catch (error) {
+    console.error('Migration error:', error);
+    await database.execAsync(`DROP TABLE IF EXISTS schedules`);
+    await database.execAsync(`
+      CREATE TABLE schedules (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        date TEXT NOT NULL,
+        time TEXT NOT NULL,
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_schedules_date ON schedules(date);
+    `);
+  }
 }
