@@ -10,6 +10,7 @@ interface ScheduleState {
   loadSchedules: () => Promise<void>;
   loadSchedulesByDate: (date: string) => Promise<void>;
   addSchedule: (schedule: Omit<Schedule, 'id' | 'created_at'>) => Promise<void>;
+  updateSchedule: (schedule: Schedule) => Promise<void>;
   toggleSchedule: (id: string, isActive: boolean) => Promise<void>;
   deleteSchedule: (id: string) => Promise<void>;
 }
@@ -42,6 +43,25 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
         schedule.time,
         `schedule_${id}`
       );
+    }
+
+    const schedules = await db.getAllSchedules();
+    set({ schedules });
+  },
+
+  updateSchedule: async (schedule) => {
+    await db.upsertSchedule(schedule);
+
+    if (schedule.is_active) {
+      await scheduleDateNotification(
+        schedule.title,
+        schedule.description || 'Time for your activity!',
+        schedule.date,
+        schedule.time,
+        `schedule_${schedule.id}`
+      );
+    } else {
+      await cancelNotification(`schedule_${schedule.id}`);
     }
 
     const schedules = await db.getAllSchedules();

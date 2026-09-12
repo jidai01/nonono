@@ -14,6 +14,7 @@ interface JournalState {
   loadActivities: (entryId: string) => Promise<void>;
   saveEntry: (entry: Omit<JournalEntry, 'created_at' | 'updated_at'>) => Promise<void>;
   addActivity: (activity: Omit<Activity, 'created_at' | 'id'>) => Promise<void>;
+  updateActivity: (activity: Activity) => Promise<void>;
   deleteActivity: (id: string) => Promise<void>;
   getStreak: () => Promise<number>;
   getLongestStreak: () => Promise<number>;
@@ -59,6 +60,10 @@ export const useJournalStore = create<JournalState>((set) => ({
   addActivity: async (activity) => {
     const id = Crypto.randomUUID();
     await db.addActivity({ ...activity, id });
+  },
+
+  updateActivity: async (activity) => {
+    await db.updateActivity(activity);
   },
 
   deleteActivity: async (id) => {

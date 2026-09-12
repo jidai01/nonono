@@ -61,7 +61,11 @@ export default function ScheduleScreen() {
   };
 
   const renderSchedule = ({ item }: { item: Schedule }) => (
-    <View style={[styles.scheduleCard, !item.is_active && styles.scheduleCardInactive]}>
+    <TouchableOpacity
+      style={[styles.scheduleCard, !item.is_active && styles.scheduleCardInactive]}
+      onPress={() => router.push(`/schedule/edit?id=${item.id}`)}
+      activeOpacity={0.7}
+    >
       <View style={styles.scheduleHeader}>
         <View style={styles.scheduleIconContainer}>
           <Ionicons name="time" size={20} color={Colors.primary} />
@@ -87,7 +91,7 @@ export default function ScheduleScreen() {
         <Ionicons name="trash-outline" size={16} color={Colors.error} />
         <Text style={styles.deleteButtonText}>Delete</Text>
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 
   return (

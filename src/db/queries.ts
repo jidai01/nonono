@@ -85,6 +85,14 @@ export async function addActivity(activity: Omit<Activity, 'created_at'>): Promi
   );
 }
 
+export async function updateActivity(activity: Activity): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
+    'UPDATE activities SET name = ?, duration_minutes = ?, notes = ? WHERE id = ?',
+    [activity.name, activity.duration_minutes, activity.notes, activity.id]
+  );
+}
+
 export async function deleteActivity(id: string): Promise<void> {
   const db = await getDatabase();
   await db.runAsync('DELETE FROM activities WHERE id = ?', [id]);

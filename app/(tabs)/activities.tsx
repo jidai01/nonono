@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useJournalStore } from '../../src/stores/journalStore';
@@ -6,31 +6,60 @@ import { PREDEFINED_ACTIVITIES, Activity } from '../../src/types';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function ActivitiesScreen() {
-  const { activities, loadActivities, addActivity, deleteActivity } = useJournalStore();
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newActivityName, setNewActivityName] = useState('');
+  const { activities, loadActivities, addActivity, updateActivity, deleteActivity } = useJournalStore();
+  const [showModal, setShowModal] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [activityName, setActivityName] = useState('');
   const [duration, setDuration] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedPredefined, setSelectedPredefined] = useState<string | null>(null);
 
-  const handleAddActivity = async () => {
-    if (!newActivityName && !selectedPredefined) {
+  const openAddModal = () => {
+    setEditingActivity(null);
+    setActivityName('');
+    setDuration('');
+    setNotes('');
+    setSelectedPredefined(null);
+    setShowModal(true);
+  };
+
+  const openEditModal = (activity: Activity) => {
+    setEditingActivity(activity);
+    setActivityName(activity.name);
+    setDuration(activity.duration_minutes > 0 ? String(activity.duration_minutes) : '');
+    setNotes(activity.notes || '');
+    setSelectedPredefined(PREDEFINED_ACTIVITIES.includes(activity.name) ? activity.name : null);
+    setShowModal(true);
+  };
+
+  const handleSave = async () => {
+    if (!activityName && !selectedPredefined) {
       Alert.alert('Error', 'Select or enter an activity name');
       return;
     }
 
-    const activityName = selectedPredefined || newActivityName;
+    const name = selectedPredefined || activityName;
     const today = new Date().toISOString().split('T')[0];
 
-    await addActivity({
-      entry_id: today,
-      name: activityName,
-      duration_minutes: parseInt(duration) || 0,
-      notes,
-    });
+    if (editingActivity) {
+      await updateActivity({
+        ...editingActivity,
+        name,
+        duration_minutes: parseInt(duration) || 0,
+        notes,
+      });
+    } else {
+      await addActivity({
+        entry_id: today,
+        name,
+        duration_minutes: parseInt(duration) || 0,
+        notes,
+      });
+    }
 
-    setShowAddModal(false);
-    setNewActivityName('');
+    setShowModal(false);
+    setEditingActivity(null);
+    setActivityName('');
     setDuration('');
     setNotes('');
     setSelectedPredefined(null);
@@ -50,7 +79,7 @@ export default function ActivitiesScreen() {
   const renderActivity = ({ item }: { item: Activity }) => (
     <TouchableOpacity
       style={styles.activityCard}
-      onLongPress={() => handleDeleteActivity(item.id)}
+      onPress={() => openEditModal(item)}
       activeOpacity={0.7}
     >
       <View style={styles.activityIconContainer}>
@@ -65,15 +94,22 @@ export default function ActivitiesScreen() {
               <Text style={styles.activityMetaText}>{item.duration_minutes} min</Text>
             </View>
           )}
+          {item.notes ? (
+            <View style={styles.activityMetaItem}>
+              <Ionicons name="document-text-outline" size={14} color={Colors.textTertiary} />
+              <Text style={styles.activityMetaText} numberOfLines={1}>{item.notes}</Text>
+            </View>
+          ) : null}
         </View>
       </View>
-      <Ionicons name="chevron-forward" size={16} color={Colors.textTertiary} />
+      <TouchableOpacity onPress={() => handleDeleteActivity(item.id)} style={styles.deleteButton}>
+        <Ionicons name="trash-outline" size={18} color={Colors.error} />
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      {/* Activities List */}
       {activities.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconContainer}>
@@ -92,32 +128,25 @@ export default function ActivitiesScreen() {
         />
       )}
 
-      {/* FAB */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setShowAddModal(true)}
-        activeOpacity={0.8}
-      >
+      <TouchableOpacity style={styles.fab} onPress={openAddModal} activeOpacity={0.8}>
         <Ionicons name="add" size={28} color={Colors.textInverse} />
       </TouchableOpacity>
 
-      {/* Add Activity Modal */}
       <Modal
-        visible={showAddModal}
+        visible={showModal}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowAddModal(false)}
+        onRequestClose={() => setShowModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Activity</Text>
-              <TouchableOpacity onPress={() => setShowAddModal(false)} style={styles.modalCloseButton}>
+              <Text style={styles.modalTitle}>{editingActivity ? 'Edit Activity' : 'Add Activity'}</Text>
+              <TouchableOpacity onPress={() => setShowModal(false)} style={styles.modalCloseButton}>
                 <Ionicons name="close" size={24} color={Colors.textTertiary} />
               </TouchableOpacity>
             </View>
 
-            {/* Predefined Activities */}
             <Text style={styles.sectionLabel}>Common Activities</Text>
             <View style={styles.predefinedContainer}>
               {PREDEFINED_ACTIVITIES.map(activity => (
@@ -129,7 +158,7 @@ export default function ActivitiesScreen() {
                   ]}
                   onPress={() => {
                     setSelectedPredefined(activity);
-                    setNewActivityName('');
+                    setActivityName('');
                   }}
                 >
                   <Text style={[
@@ -142,19 +171,17 @@ export default function ActivitiesScreen() {
               ))}
             </View>
 
-            {/* Custom Activity Input */}
             <TextInput
               style={styles.input}
               placeholder="Or enter custom activity..."
               placeholderTextColor={Colors.textTertiary}
-              value={newActivityName}
+              value={activityName}
               onChangeText={text => {
-                setNewActivityName(text);
+                setActivityName(text);
                 setSelectedPredefined(null);
               }}
             />
 
-            {/* Duration Input */}
             <TextInput
               style={styles.input}
               placeholder="Duration (minutes)"
@@ -164,7 +191,6 @@ export default function ActivitiesScreen() {
               onChangeText={setDuration}
             />
 
-            {/* Notes Input */}
             <TextInput
               style={[styles.input, styles.notesInput]}
               placeholder="Notes (optional)"
@@ -174,16 +200,12 @@ export default function ActivitiesScreen() {
               onChangeText={setNotes}
             />
 
-            {/* Action Buttons */}
             <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowAddModal(false)}
-              >
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowModal(false)}>
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.addButton} onPress={handleAddActivity}>
-                <Text style={styles.addButtonText}>Add Activity</Text>
+              <TouchableOpacity style={styles.addButton} onPress={handleSave}>
+                <Text style={styles.addButtonText}>{editingActivity ? 'Update' : 'Add'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -241,6 +263,10 @@ const styles = StyleSheet.create({
   activityMetaText: {
     fontSize: Typography.sizes.sm,
     color: Colors.textTertiary,
+    maxWidth: 100,
+  },
+  deleteButton: {
+    padding: Spacing.sm,
   },
   emptyContainer: {
     flex: 1,
@@ -267,7 +293,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.textTertiary,
     textAlign: 'center',
-    lineHeight: Typography.sizes.md * Typography.lineHeights.relaxed,
   },
   fab: {
     position: 'absolute',
