@@ -7,6 +7,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        headerShown: true,
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textTertiary,
         tabBarStyle: {
@@ -23,9 +24,9 @@ export default function TabLayout() {
           marginTop: 2,
         },
         headerStyle: {
-          backgroundColor: Colors.primary,
+          backgroundColor: Colors.surface,
         },
-        headerTintColor: Colors.textInverse,
+        headerTintColor: Colors.textPrimary,
         headerTitleStyle: {
           fontWeight: Typography.weights.semibold,
           fontSize: Typography.sizes.lg,
