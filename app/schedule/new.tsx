@@ -25,7 +25,7 @@ export default function NewScheduleScreen() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert('Error', 'Masukkan judul jadwal');
+      Alert.alert('Error', 'Enter a schedule title');
       return;
     }
 
@@ -46,18 +46,18 @@ export default function NewScheduleScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.sectionTitle}>Judul Jadwal</Text>
+        <Text style={styles.sectionTitle}>Schedule Title</Text>
         <TextInput
           style={styles.input}
-          placeholder="Contoh: Olahraga Pagi"
+          placeholder="e.g., Morning Exercise"
           value={title}
           onChangeText={setTitle}
         />
 
-        <Text style={styles.sectionTitle}>Deskripsi (opsional)</Text>
+        <Text style={styles.sectionTitle}>Description (optional)</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
-          placeholder="Detail aktivitas yang akan dilakukan..."
+          placeholder="Details about the activity..."
           multiline
           textAlignVertical="top"
           value={description}
@@ -79,10 +79,10 @@ export default function NewScheduleScreen() {
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Waktu</Text>
+        <Text style={styles.sectionTitle}>Time</Text>
         <TextInput
           style={styles.input}
-          placeholder="HH:MM (contoh: 09:00)"
+          placeholder="HH:MM (e.g., 09:00)"
           value={time}
           onChangeText={setTime}
           keyboardType="numbers-and-punctuation"
@@ -90,10 +90,10 @@ export default function NewScheduleScreen() {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
-            <Text style={styles.cancelButtonText}>Batal</Text>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Simpan</Text>
+            <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

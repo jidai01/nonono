@@ -5,8 +5,8 @@ let notificationHandler: any = null;
 export async function requestNotificationPermissions(): Promise<boolean> {
   if (Platform.OS === 'android') {
     Alert.alert(
-      'Notifikasi',
-      'Fitur notifikasi tersedia di development build, bukan Expo Go.',
+      'Notifications',
+      'Notification features are available in development build, not Expo Go.',
       [{ text: 'OK' }]
     );
     return false;
@@ -21,8 +21,8 @@ export async function scheduleNotification(
   notificationId?: string
 ): Promise<string | null> {
   Alert.alert(
-    'Notifikasi',
-    'Fitur notifikasi tersedia di development build, bukan Expo Go.',
+    'Notifications',
+    'Notification features are available in development build, not Expo Go.',
     [{ text: 'OK' }]
   );
   return null;
@@ -36,8 +36,8 @@ export async function scheduleWeeklyNotification(
   notificationId?: string
 ): Promise<string | null> {
   Alert.alert(
-    'Notifikasi',
-    `Pengingat "${title}" akan aktif setelah build ke device.\nHari: ${['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][dayOfWeek]}\nJam: ${time}`,
+    'Notifications',
+    `Reminder "${title}" will be active after building to device.\nDay: ${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][dayOfWeek]}\nTime: ${time}`,
     [{ text: 'OK' }]
   );
   return null;

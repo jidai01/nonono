@@ -30,8 +30,8 @@ export default function SettingsScreen() {
   const toggleBiometric = async (value: boolean) => {
     if (value) {
       const result = await LocalAuth.authenticateAsync({
-        promptMessage: 'Verifikasi untuk mengaktifkan biometrik',
-        cancelLabel: 'Batal',
+        promptMessage: 'Verify to enable biometrics',
+        cancelLabel: 'Cancel',
       });
       if (result.success) {
         await updateBiometricSetting(true);
@@ -45,8 +45,8 @@ export default function SettingsScreen() {
 
   const handleExport = async () => {
     Alert.prompt(
-      'Masukkan Passphrase',
-      'Passphrase akan digunakan untuk mengenkripsi data',
+      'Enter Passphrase',
+      'Passphrase will be used to encrypt your data',
       async (passphrase) => {
         if (!passphrase) return;
 
@@ -73,12 +73,12 @@ export default function SettingsScreen() {
           await FileSystem.writeAsStringAsync(fileUri, encrypted);
 
           Alert.alert(
-            'Export Berhasil',
-            `Data telah disimpan di:\n${fileUri}`,
+            'Export Successful',
+            `Data has been saved to:\n${fileUri}`,
             [{ text: 'OK' }]
           );
         } catch (error) {
-          Alert.alert('Error', 'Gagal melakukan export');
+          Alert.alert('Error', 'Failed to export data');
         }
       },
       'secure-text'
@@ -95,8 +95,8 @@ export default function SettingsScreen() {
       if (result.canceled) return;
 
       Alert.prompt(
-        'Masukkan Passphrase',
-        'Masukkan passphrase yang digunakan saat export',
+        'Enter Passphrase',
+        'Enter the passphrase used during export',
         async (passphrase) => {
           if (!passphrase) return;
 
@@ -105,17 +105,17 @@ export default function SettingsScreen() {
             const decrypted = await decryptData(fileContent, passphrase);
 
             if (!decrypted) {
-              Alert.alert('Error', 'Passphrase salah atau file corrupt');
+              Alert.alert('Error', 'Wrong passphrase or corrupted file');
               return;
             }
 
             Alert.alert(
-              'Import Berhasil',
-              'Data akan diimport. Aplikasi akan restart.',
+              'Import Successful',
+              'Data will be imported. The app will restart.',
               [{ text: 'OK' }]
             );
           } catch (error) {
-            Alert.alert('Error', 'Gagal melakukan import');
+            Alert.alert('Error', 'Failed to import data');
           }
         },
         'secure-text'
@@ -128,9 +128,9 @@ export default function SettingsScreen() {
   const handleLogout = () => {
     Alert.alert(
       'Logout',
-      'Kamu akan keluar dari aplikasi',
+      'You will be logged out from the app',
       [
-        { text: 'Batal', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         { text: 'Logout', style: 'destructive', onPress: () => logout() },
       ]
     );
@@ -139,14 +139,14 @@ export default function SettingsScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Keamanan</Text>
+        <Text style={styles.sectionTitle}>Security</Text>
 
         {hasBiometric && (
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Biometrik</Text>
+              <Text style={styles.settingLabel}>Biometrics</Text>
               <Text style={styles.settingDescription}>
-                Gunakan sidik jari atau Face ID untuk masuk
+                Use fingerprint or Face ID to login
               </Text>
             </View>
             <Switch
@@ -165,7 +165,7 @@ export default function SettingsScreen() {
           <View style={styles.settingInfo}>
             <Text style={styles.settingLabel}>Export Data</Text>
             <Text style={styles.settingDescription}>
-              Ekspor data kamu dalam format terenkripsi
+              Export your data in encrypted format
             </Text>
           </View>
           <Text style={styles.arrow}>›</Text>
@@ -175,7 +175,7 @@ export default function SettingsScreen() {
           <View style={styles.settingInfo}>
             <Text style={styles.settingLabel}>Import Data</Text>
             <Text style={styles.settingDescription}>
-              Impor data dari backup sebelumnya
+              Import data from a previous backup
             </Text>
           </View>
           <Text style={styles.arrow}>›</Text>
@@ -183,13 +183,13 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Akun</Text>
+        <Text style={styles.sectionTitle}>Account</Text>
 
         <TouchableOpacity style={styles.settingRow} onPress={handleLogout}>
           <View style={styles.settingInfo}>
             <Text style={[styles.settingLabel, { color: '#FF6B6B' }]}>Logout</Text>
             <Text style={styles.settingDescription}>
-              Keluar dari aplikasi
+              Log out from the app
             </Text>
           </View>
           <Text style={[styles.arrow, { color: '#FF6B6B' }]}>›</Text>
@@ -198,7 +198,7 @@ export default function SettingsScreen() {
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>Nonono v1.0.0</Text>
-        <Text style={styles.footerText}>Data tersimpan lokal di perangkat</Text>
+        <Text style={styles.footerText}>Data is stored locally on device</Text>
       </View>
     </ScrollView>
   );

@@ -49,11 +49,11 @@ export interface ExportData {
 export type MoodLevel = 1 | 2 | 3 | 4 | 5;
 
 export const MOOD_LABELS: Record<MoodLevel, string> = {
-  1: 'Sangat Buruk',
-  2: 'Buruk',
-  3: 'Biasa',
-  4: 'Baik',
-  5: 'Sangat Baik',
+  1: 'Terrible',
+  2: 'Bad',
+  3: 'Okay',
+  4: 'Good',
+  5: 'Great',
 };
 
 export const MOOD_EMOJIS: Record<MoodLevel, string> = {
@@ -64,17 +64,17 @@ export const MOOD_EMOJIS: Record<MoodLevel, string> = {
   5: '😊',
 };
 
-export const DAY_NAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+export const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export const PREDEFINED_ACTIVITIES = [
-  'Olahraga',
-  'Meditasi',
-  'Membaca',
-  'Berkumpul dengan Teman',
-  'Hobi Baru',
-  'Jurnal',
-  'Mendengarkan Musik',
-  'Memasak',
-  'Berjalan-jalan',
+  'Exercise',
+  'Meditation',
+  'Reading',
+  'Socializing',
+  'New Hobby',
+  'Journaling',
+  'Listening to Music',
+  'Cooking',
+  'Walking',
   'Yoga',
 ];

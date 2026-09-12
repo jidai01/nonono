@@ -46,15 +46,15 @@ export default function CalendarScreen() {
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{currentStreak}</Text>
-          <Text style={styles.statLabel}>Hari Berturut</Text>
+          <Text style={styles.statLabel}>Day Streak</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{entries.length}</Text>
-          <Text style={styles.statLabel}>Total Entri</Text>
+          <Text style={styles.statLabel}>Total Entries</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{entries.filter(e => e.is_relapse).length}</Text>
-          <Text style={styles.statLabel}>Relapse</Text>
+          <Text style={styles.statLabel}>Relapses</Text>
         </View>
       </View>
 
@@ -81,7 +81,7 @@ export default function CalendarScreen() {
       <View style={styles.legend}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#4CAF50' }]} />
-          <Text style={styles.legendText}>Hari Baik</Text>
+          <Text style={styles.legendText}>Sober Day</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#FF6B6B' }]} />
@@ -89,7 +89,7 @@ export default function CalendarScreen() {
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#DDD' }]} />
-          <Text style={styles.legendText}>Belum Ada Entri</Text>
+          <Text style={styles.legendText}>No Entry</Text>
         </View>
       </View>
     </View>

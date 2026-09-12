@@ -47,7 +47,7 @@ export default function JournalScreen() {
     <View style={styles.container}>
       <TextInput
         style={styles.searchInput}
-        placeholder="Cari entri..."
+        placeholder="Search entries..."
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
@@ -55,8 +55,8 @@ export default function JournalScreen() {
       {filteredEntries.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>📝</Text>
-          <Text style={styles.emptyText}>Belum ada entri jurnal</Text>
-          <Text style={styles.emptySubtext}>Mulai catat perasaan harianmu</Text>
+          <Text style={styles.emptyText}>No journal entries yet</Text>
+          <Text style={styles.emptySubtext}>Start recording your daily feelings</Text>
         </View>
       ) : (
         <FlatList

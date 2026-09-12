@@ -19,11 +19,11 @@ export default function ScheduleScreen() {
 
   const handleDeleteSchedule = (id: string) => {
     Alert.alert(
-      'Hapus Jadwal',
-      'Apakah kamu yakin ingin menghapus jadwal ini?',
+      'Delete Schedule',
+      'Are you sure you want to delete this schedule?',
       [
-        { text: 'Batal', style: 'cancel' },
-        { text: 'Hapus', style: 'destructive', onPress: () => deleteSchedule(id) },
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => deleteSchedule(id) },
       ]
     );
   };
@@ -49,7 +49,7 @@ export default function ScheduleScreen() {
         style={styles.deleteButton}
         onPress={() => handleDeleteSchedule(item.id)}
       >
-        <Text style={styles.deleteButtonText}>Hapus</Text>
+        <Text style={styles.deleteButtonText}>Delete</Text>
       </TouchableOpacity>
     </View>
   );
@@ -81,8 +81,8 @@ export default function ScheduleScreen() {
       {filteredSchedules.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>⏰</Text>
-          <Text style={styles.emptyText}>Belum ada jadwal</Text>
-          <Text style={styles.emptySubtext}>Buat jadwal untuk mengingat aktivitas pencegahan</Text>
+          <Text style={styles.emptyText}>No schedules yet</Text>
+          <Text style={styles.emptySubtext}>Create reminders for prevention activities</Text>
         </View>
       ) : (
         <FlatList

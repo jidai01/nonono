@@ -48,11 +48,11 @@ export default function AuthScreen() {
 
   const handleSetup = async () => {
     if (password.length < 6) {
-      Alert.alert('Error', 'Password harus minimal 6 karakter');
+      Alert.alert('Error', 'Password must be at least 6 characters');
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Password tidak cocok');
+      Alert.alert('Error', 'Passwords do not match');
       return;
     }
 
@@ -61,7 +61,7 @@ export default function AuthScreen() {
       setRecoveryCode(code);
       setShowRecoveryCode(true);
     } catch (error) {
-      Alert.alert('Error', 'Gagal membuat password');
+      Alert.alert('Error', 'Failed to create password');
     }
   };
 
@@ -70,7 +70,7 @@ export default function AuthScreen() {
     if (success) {
       router.replace('/(tabs)');
     } else {
-      Alert.alert('Error', 'Password salah');
+      Alert.alert('Error', 'Wrong password');
     }
   };
 
@@ -89,15 +89,15 @@ export default function AuthScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.card}>
-          <Text style={styles.title}>Kode Pemulihan</Text>
+          <Text style={styles.title}>Recovery Code</Text>
           <Text style={styles.subtitle}>
-            Simpan kode ini di tempat aman. Kode ini hanya ditampilkan sekali.
+            Save this code in a safe place. This code is shown only once.
           </Text>
           <View style={styles.recoveryCodeContainer}>
             <Text style={styles.recoveryCode}>{recoveryCode}</Text>
           </View>
           <TouchableOpacity style={styles.button} onPress={handleRecoveryCodeDone}>
-            <Text style={styles.buttonText}>Saya sudah menyimpan</Text>
+            <Text style={styles.buttonText}>I've saved it</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -112,15 +112,15 @@ export default function AuthScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.appName}>Nonono</Text>
-          <Text style={styles.tagline}>Pemulihan Dimulai dari Sini</Text>
+          <Text style={styles.tagline}>Recovery Starts Here</Text>
 
           {!isSetupComplete ? (
             <>
-              <Text style={styles.title}>Buat Password</Text>
+              <Text style={styles.title}>Create Password</Text>
               <View style={styles.passwordContainer}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder="Masukkan password"
+                  placeholder="Enter password"
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
@@ -139,7 +139,7 @@ export default function AuthScreen() {
               <View style={styles.passwordContainer}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder="Konfirmasi password"
+                  placeholder="Confirm password"
                   secureTextEntry={!showConfirmPassword}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
@@ -163,7 +163,7 @@ export default function AuthScreen() {
                     color={passwordsMatch ? '#4CAF50' : '#FF6B6B'}
                   />
                   <Text style={[styles.validationText, { color: passwordsMatch ? '#4CAF50' : '#FF6B6B' }]}>
-                    {passwordsMatch ? 'Password cocok' : 'Password tidak cocok'}
+                    {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
                   </Text>
                 </View>
               )}
@@ -172,16 +172,16 @@ export default function AuthScreen() {
                 onPress={handleSetup}
                 disabled={!passwordsMatch || password.length < 6}
               >
-                <Text style={styles.buttonText}>Buat Password</Text>
+                <Text style={styles.buttonText}>Create Password</Text>
               </TouchableOpacity>
             </>
           ) : (
             <>
-              <Text style={styles.title}>Masuk</Text>
+              <Text style={styles.title}>Login</Text>
               <View style={styles.passwordContainer}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder="Masukkan password"
+                  placeholder="Enter password"
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
@@ -198,7 +198,7 @@ export default function AuthScreen() {
                 </TouchableOpacity>
               </View>
               <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Masuk</Text>
+                <Text style={styles.buttonText}>Login</Text>
               </TouchableOpacity>
 
               {hasBiometric && settings?.biometric_enabled && (
@@ -206,7 +206,7 @@ export default function AuthScreen() {
                   style={styles.biometricButton}
                   onPress={handleBiometricLogin}
                 >
-                  <Text style={styles.biometricText}>Gunakan Biometrik</Text>
+                  <Text style={styles.biometricText}>Use Biometrics</Text>
                 </TouchableOpacity>
               )}
             </>

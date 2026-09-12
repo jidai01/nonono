@@ -92,7 +92,7 @@ export default function NewEntryScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.dateText}>{entryDate}</Text>
 
-        <Text style={styles.sectionTitle}>Bagaimana perasaanmu hari ini?</Text>
+        <Text style={styles.sectionTitle}>How are you feeling today?</Text>
         <View style={styles.moodContainer}>
           {[1, 2, 3, 4, 5].map((level) => (
             <TouchableOpacity
@@ -106,10 +106,10 @@ export default function NewEntryScreen() {
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Tulis jurnal harianmu</Text>
+        <Text style={styles.sectionTitle}>Write your daily journal</Text>
         <TextInput
           style={styles.textArea}
-          placeholder="Ceritakan perasaanmu hari ini..."
+          placeholder="Tell me about your feelings today..."
           multiline
           textAlignVertical="top"
           value={feelings}
@@ -118,13 +118,13 @@ export default function NewEntryScreen() {
 
         <View style={styles.relapseContainer}>
           <View style={styles.relapseHeader}>
-            <Text style={styles.sectionTitle}>Apakah kamu mengalami relapse hari ini?</Text>
+            <Text style={styles.sectionTitle}>Did you experience a relapse today?</Text>
             <TouchableOpacity
               style={[styles.toggleButton, isRelapse && styles.toggleButtonActive]}
               onPress={() => setIsRelapse(!isRelapse)}
             >
               <Text style={[styles.toggleText, isRelapse && styles.toggleTextActive]}>
-                {isRelapse ? 'Ya' : 'Tidak'}
+                {isRelapse ? 'Yes' : 'No'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -132,7 +132,7 @@ export default function NewEntryScreen() {
           {isRelapse && (
             <TextInput
               style={[styles.textArea, styles.relapseInput]}
-              placeholder="Ceritakan apa yang terjadi..."
+              placeholder="Tell me what happened..."
               multiline
               textAlignVertical="top"
               value={relapseNotes}
@@ -141,7 +141,7 @@ export default function NewEntryScreen() {
           )}
         </View>
 
-        <Text style={styles.sectionTitle}>Aktivitas pencegahan yang dilakukan</Text>
+        <Text style={styles.sectionTitle}>Prevention activities done</Text>
         <View style={styles.activitiesGrid}>
           {PREDEFINED_ACTIVITIES.map((activity) => (
             <TouchableOpacity
@@ -166,17 +166,17 @@ export default function NewEntryScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Atau tulis aktivitas lain..."
+          placeholder="Or enter custom activity..."
           value={customActivity}
           onChangeText={setCustomActivity}
         />
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
-            <Text style={styles.cancelButtonText}>Batal</Text>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Simpan</Text>
+            <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

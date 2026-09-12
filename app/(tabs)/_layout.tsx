@@ -31,40 +31,40 @@ export default function TabLayout() {
       <Tabs.Screen
         name="calendar"
         options={{
-          title: 'Kalender',
-          headerTitle: 'Kalender Pemulihan',
+          title: 'Calendar',
+          headerTitle: 'Recovery Calendar',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>📅</Text>,
         }}
       />
       <Tabs.Screen
         name="journal"
         options={{
-          title: 'Jurnal',
-          headerTitle: 'Jurnal Harian',
+          title: 'Journal',
+          headerTitle: 'Daily Journal',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>📝</Text>,
         }}
       />
       <Tabs.Screen
         name="activities"
         options={{
-          title: 'Aktivitas',
-          headerTitle: 'Aktivitas Pencegahan',
+          title: 'Activities',
+          headerTitle: 'Prevention Activities',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>🏃</Text>,
         }}
       />
       <Tabs.Screen
         name="schedule"
         options={{
-          title: 'Jadwal',
-          headerTitle: 'Jadwal & Pengingat',
+          title: 'Schedule',
+          headerTitle: 'Schedule & Reminders',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>⏰</Text>,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Pengaturan',
-          headerTitle: 'Pengaturan',
+          title: 'Settings',
+          headerTitle: 'Settings',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>⚙️</Text>,
         }}
       />

@@ -39,11 +39,11 @@ export default function ActivitiesScreen() {
 
   const handleDeleteActivity = (id: string) => {
     Alert.alert(
-      'Hapus Aktivitas',
-      'Apakah kamu yakin ingin menghapus aktivitas ini?',
+      'Delete Activity',
+      'Are you sure you want to delete this activity?',
       [
-        { text: 'Batal', style: 'cancel' },
-        { text: 'Hapus', style: 'destructive', onPress: () => deleteActivity(id) },
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => deleteActivity(id) },
       ]
     );
   };
@@ -56,7 +56,7 @@ export default function ActivitiesScreen() {
       <View style={styles.activityHeader}>
         <Text style={styles.activityName}>{item.name}</Text>
         {item.duration_minutes > 0 && (
-          <Text style={styles.activityDuration}>{item.duration_minutes} menit</Text>
+          <Text style={styles.activityDuration}>{item.duration_minutes} min</Text>
         )}
       </View>
       {item.notes ? (
@@ -70,8 +70,8 @@ export default function ActivitiesScreen() {
       {activities.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>🏃</Text>
-          <Text style={styles.emptyText}>Belum ada aktivitas</Text>
-          <Text style={styles.emptySubtext}>Catat aktivitas pencegahan yang kamu lakukan</Text>
+          <Text style={styles.emptyText}>No activities yet</Text>
+          <Text style={styles.emptySubtext}>Record prevention activities you've done</Text>
         </View>
       ) : (
         <FlatList
@@ -92,9 +92,9 @@ export default function ActivitiesScreen() {
       {showAddModal && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tambah Aktivitas</Text>
+            <Text style={styles.modalTitle}>Add Activity</Text>
 
-            <Text style={styles.sectionTitle}>Aktivitas Umum:</Text>
+            <Text style={styles.sectionTitle}>Common Activities:</Text>
             <View style={styles.predefinedContainer}>
               {PREDEFINED_ACTIVITIES.map(activity => (
                 <TouchableOpacity
@@ -122,7 +122,7 @@ export default function ActivitiesScreen() {
 
             <TextInput
               style={styles.input}
-              placeholder="Atau masukkan aktivitas lain..."
+              placeholder="Or enter custom activity..."
               value={newActivityName}
               onChangeText={text => {
                 setNewActivityName(text);
@@ -132,7 +132,7 @@ export default function ActivitiesScreen() {
 
             <TextInput
               style={styles.input}
-              placeholder="Durasi (menit)"
+              placeholder="Duration (minutes)"
               keyboardType="numeric"
               value={duration}
               onChangeText={setDuration}
@@ -140,7 +140,7 @@ export default function ActivitiesScreen() {
 
             <TextInput
               style={[styles.input, styles.notesInput]}
-              placeholder="Catatan (opsional)"
+              placeholder="Notes (optional)"
               multiline
               value={notes}
               onChangeText={setNotes}
@@ -151,10 +151,10 @@ export default function ActivitiesScreen() {
                 style={styles.cancelButton}
                 onPress={() => setShowAddModal(false)}
               >
-                <Text style={styles.cancelButtonText}>Batal</Text>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.addButton} onPress={handleAddActivity}>
-                <Text style={styles.addButtonText}>Tambah</Text>
+                <Text style={styles.addButtonText}>Add</Text>
               </TouchableOpacity>
             </View>
           </View>
