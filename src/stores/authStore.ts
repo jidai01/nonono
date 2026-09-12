@@ -54,8 +54,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (!hasHardware || !isEnrolled) return false;
 
     const result = await LocalAuth.authenticateAsync({
-      promptMessage: 'Autentikasi untuk masuk',
-      cancelLabel: 'Batal',
+      promptMessage: 'Authenticate to login',
+      cancelLabel: 'Cancel',
     });
 
     if (result.success) {

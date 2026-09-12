@@ -10,18 +10,30 @@ export default function IndexScreen() {
   useEffect(() => {
     if (loading) return;
 
-    if (!isSetupComplete) {
-      router.replace('/auth');
-    } else if (!isAuthenticated) {
-      router.replace('/auth');
-    } else {
-      router.replace('/(tabs)');
-    }
+    const timer = setTimeout(() => {
+      if (!isSetupComplete) {
+        router.replace('/auth');
+      } else if (!isAuthenticated) {
+        router.replace('/auth');
+      } else {
+        router.replace('/(tabs)');
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [isSetupComplete, isAuthenticated, loading]);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#3D8B8B" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#4A90D9" />
+      <ActivityIndicator size="large" color="#3D8B8B" />
     </View>
   );
 }
@@ -31,6 +43,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F7FA',
+    backgroundColor: '#F4F7F6',
   },
 });
