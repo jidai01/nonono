@@ -1,5 +1,21 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+function LogoIcon({ color, size }: { color: string; size: number }) {
+  return (
+    <View style={{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: color,
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}>
+      <Ionicons name="pulse" size={size * 0.5} color="white" />
+    </View>
+  );
+}
 
 export default function TabLayout() {
   return (
@@ -15,16 +31,23 @@ export default function TabLayout() {
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
           shadowRadius: 5,
-          height: 60,
-          paddingBottom: 8,
+          height: 65,
+          paddingBottom: 10,
           paddingTop: 8,
         },
         headerStyle: {
           backgroundColor: '#4A90D9',
+          elevation: 5,
+          shadowColor: '#4A90D9',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 5,
         },
         headerTintColor: 'white',
         headerTitleStyle: {
-          fontWeight: '600',
+          fontWeight: '700',
+          fontSize: 18,
+          letterSpacing: 0.5,
         },
       }}
     >
@@ -33,7 +56,7 @@ export default function TabLayout() {
         options={{
           title: 'Calendar',
           headerTitle: 'Recovery Calendar',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>📅</Text>,
+          tabBarIcon: ({ color, size }) => <LogoIcon color={color} size={size} />,
         }}
       />
       <Tabs.Screen
@@ -41,7 +64,7 @@ export default function TabLayout() {
         options={{
           title: 'Journal',
           headerTitle: 'Daily Journal',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>📝</Text>,
+          tabBarIcon: ({ color, size }) => <Ionicons name="book" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -49,7 +72,7 @@ export default function TabLayout() {
         options={{
           title: 'Activities',
           headerTitle: 'Prevention Activities',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>🏃</Text>,
+          tabBarIcon: ({ color, size }) => <Ionicons name="fitness" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -57,7 +80,7 @@ export default function TabLayout() {
         options={{
           title: 'Schedule',
           headerTitle: 'Schedule & Reminders',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>⏰</Text>,
+          tabBarIcon: ({ color, size }) => <Ionicons name="alarm" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -65,7 +88,7 @@ export default function TabLayout() {
         options={{
           title: 'Settings',
           headerTitle: 'Settings',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>⚙️</Text>,
+          tabBarIcon: ({ color, size }) => <Ionicons name="settings" size={size} color={color} />,
         }}
       />
     </Tabs>
