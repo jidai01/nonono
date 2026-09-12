@@ -22,6 +22,9 @@ export default function AuthScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const passwordsMatch = password.length > 0 && confirmPassword.length > 0 && password === confirmPassword;
+  const passwordsMismatch = confirmPassword.length > 0 && password !== confirmPassword;
   const [recoveryCode, setRecoveryCode] = useState('');
   const [showRecoveryCode, setShowRecoveryCode] = useState(false);
   const [isSetup, setIsSetup] = useState(false);
@@ -152,7 +155,23 @@ export default function AuthScreen() {
                   />
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.button} onPress={handleSetup}>
+              {confirmPassword.length > 0 && (
+                <View style={styles.validationRow}>
+                  <Ionicons
+                    name={passwordsMatch ? 'checkmark-circle' : 'close-circle'}
+                    size={18}
+                    color={passwordsMatch ? '#4CAF50' : '#FF6B6B'}
+                  />
+                  <Text style={[styles.validationText, { color: passwordsMatch ? '#4CAF50' : '#FF6B6B' }]}>
+                    {passwordsMatch ? 'Password cocok' : 'Password tidak cocok'}
+                  </Text>
+                </View>
+              )}
+              <TouchableOpacity
+                style={[styles.button, (!passwordsMatch || password.length < 6) && styles.buttonDisabled]}
+                onPress={handleSetup}
+                disabled={!passwordsMatch || password.length < 6}
+              >
                 <Text style={styles.buttonText}>Buat Password</Text>
               </TouchableOpacity>
             </>
@@ -273,12 +292,26 @@ const styles = StyleSheet.create({
   eyeButton: {
     padding: 15,
   },
+  validationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+    paddingHorizontal: 5,
+  },
+  validationText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
   button: {
     backgroundColor: '#4A90D9',
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
     marginTop: 10,
+  },
+  buttonDisabled: {
+    backgroundColor: '#B0C4DE',
   },
   buttonText: {
     color: 'white',
