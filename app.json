@@ -33,12 +33,6 @@
         {
           "faceIDPermission": "Allow Nonono to use Face ID for quick login"
         }
-      ],
-      [
-        "expo-notifications",
-        {
-          "sounds": []
-        }
       ]
     ]
   }

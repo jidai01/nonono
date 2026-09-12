@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Schedule } from '../types';
 import * as db from '../db/queries';
 import * as Crypto from 'expo-crypto';
-import * as Notifications from '../utils/notifications';
+import { scheduleWeeklyNotification, cancelNotification } from '../utils/notifications';
 
 interface ScheduleState {
   schedules: Schedule[];
@@ -35,7 +35,7 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
     await db.upsertSchedule({ ...schedule, id });
 
     if (schedule.is_active) {
-      await Notifications.scheduleWeeklyNotification(
+      await scheduleWeeklyNotification(
         schedule.title,
         schedule.description || 'Saatnya melakukan aktivitas!',
         schedule.day_of_week,
@@ -51,7 +51,7 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
       await db.upsertSchedule({ ...schedule, is_active: isActive });
 
       if (isActive) {
-        await Notifications.scheduleWeeklyNotification(
+        await scheduleWeeklyNotification(
           schedule.title,
           schedule.description || 'Saatnya melakukan aktivitas!',
           schedule.day_of_week,
@@ -59,7 +59,7 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
           `schedule_${id}`
         );
       } else {
-        await Notifications.cancelNotification(`schedule_${id}`);
+        await cancelNotification(`schedule_${id}`);
       }
 
       const schedules = await db.getAllSchedules();
@@ -69,7 +69,7 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
 
   deleteSchedule: async (id) => {
     await db.deleteSchedule(id);
-    await Notifications.cancelNotification(`schedule_${id}`);
+    await cancelNotification(`schedule_${id}`);
     const schedules = await db.getAllSchedules();
     set({ schedules });
   },
