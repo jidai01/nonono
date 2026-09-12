@@ -204,6 +204,24 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
         <View style={styles.sectionContent}>
+          <TouchableOpacity 
+            style={styles.settingRow} 
+            onPress={() => router.push('/test-routes')}
+          >
+            <View style={styles.settingIconContainer}>
+              <Ionicons name="bug" size={20} color={Colors.primary} />
+            </View>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Route Diagnostics</Text>
+              <Text style={styles.settingDescription}>
+                Test all app routes and navigation
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+
           <TouchableOpacity style={styles.settingRow} onPress={handleLogout}>
             <View style={[styles.settingIconContainer, { backgroundColor: Colors.error + '15' }]}>
               <Ionicons name="log-out" size={20} color={Colors.error} />
