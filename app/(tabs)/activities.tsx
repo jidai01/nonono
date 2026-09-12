@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useJournalStore } from '../../src/stores/journalStore';
 import { PREDEFINED_ACTIVITIES, Activity } from '../../src/types';
-import * as Crypto from 'expo-crypto';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function ActivitiesScreen() {
   const { activities, loadActivities, addActivity, deleteActivity } = useJournalStore();
@@ -14,13 +15,11 @@ export default function ActivitiesScreen() {
 
   const handleAddActivity = async () => {
     if (!newActivityName && !selectedPredefined) {
-      Alert.alert('Error', 'Pilih atau masukkan nama aktivitas');
+      Alert.alert('Error', 'Select or enter an activity name');
       return;
     }
 
     const activityName = selectedPredefined || newActivityName;
-
-    // We need an entry_id, for now we'll use today's date
     const today = new Date().toISOString().split('T')[0];
 
     await addActivity({
@@ -52,26 +51,36 @@ export default function ActivitiesScreen() {
     <TouchableOpacity
       style={styles.activityCard}
       onLongPress={() => handleDeleteActivity(item.id)}
+      activeOpacity={0.7}
     >
-      <View style={styles.activityHeader}>
-        <Text style={styles.activityName}>{item.name}</Text>
-        {item.duration_minutes > 0 && (
-          <Text style={styles.activityDuration}>{item.duration_minutes} min</Text>
-        )}
+      <View style={styles.activityIconContainer}>
+        <Ionicons name="flash" size={20} color={Colors.accent} />
       </View>
-      {item.notes ? (
-        <Text style={styles.activityNotes}>{item.notes}</Text>
-      ) : null}
+      <View style={styles.activityContent}>
+        <Text style={styles.activityName}>{item.name}</Text>
+        <View style={styles.activityMeta}>
+          {item.duration_minutes > 0 && (
+            <View style={styles.activityMetaItem}>
+              <Ionicons name="time-outline" size={14} color={Colors.textTertiary} />
+              <Text style={styles.activityMetaText}>{item.duration_minutes} min</Text>
+            </View>
+          )}
+        </View>
+      </View>
+      <Ionicons name="chevron-forward" size={16} color={Colors.textTertiary} />
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
+      {/* Activities List */}
       {activities.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>🏃</Text>
-          <Text style={styles.emptyText}>No activities yet</Text>
-          <Text style={styles.emptySubtext}>Record prevention activities you've done</Text>
+          <View style={styles.emptyIconContainer}>
+            <Ionicons name="fitness-outline" size={48} color={Colors.primary} />
+          </View>
+          <Text style={styles.emptyTitle}>No Activities Yet</Text>
+          <Text style={styles.emptySubtitle}>Record the prevention activities you've done</Text>
         </View>
       ) : (
         <FlatList
@@ -79,50 +88,65 @@ export default function ActivitiesScreen() {
           renderItem={renderActivity}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
         />
       )}
 
+      {/* FAB */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => setShowAddModal(true)}
+        activeOpacity={0.8}
       >
-        <Text style={styles.fabText}>+</Text>
+        <Ionicons name="add" size={28} color={Colors.textInverse} />
       </TouchableOpacity>
 
-      {showAddModal && (
+      {/* Add Activity Modal */}
+      <Modal
+        visible={showAddModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAddModal(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Activity</Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Activity</Text>
+              <TouchableOpacity onPress={() => setShowAddModal(false)} style={styles.modalCloseButton}>
+                <Ionicons name="close" size={24} color={Colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
 
-            <Text style={styles.sectionTitle}>Common Activities:</Text>
+            {/* Predefined Activities */}
+            <Text style={styles.sectionLabel}>Common Activities</Text>
             <View style={styles.predefinedContainer}>
               {PREDEFINED_ACTIVITIES.map(activity => (
                 <TouchableOpacity
                   key={activity}
                   style={[
-                    styles.predefinedItem,
-                    selectedPredefined === activity && styles.predefinedItemSelected,
+                    styles.predefinedChip,
+                    selectedPredefined === activity && styles.predefinedChipSelected,
                   ]}
                   onPress={() => {
                     setSelectedPredefined(activity);
                     setNewActivityName('');
                   }}
                 >
-                  <Text
-                    style={[
-                      styles.predefinedText,
-                      selectedPredefined === activity && styles.predefinedTextSelected,
-                    ]}
-                  >
+                  <Text style={[
+                    styles.predefinedChipText,
+                    selectedPredefined === activity && styles.predefinedChipTextSelected,
+                  ]}>
                     {activity}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
+            {/* Custom Activity Input */}
             <TextInput
               style={styles.input}
               placeholder="Or enter custom activity..."
+              placeholderTextColor={Colors.textTertiary}
               value={newActivityName}
               onChangeText={text => {
                 setNewActivityName(text);
@@ -130,23 +154,28 @@ export default function ActivitiesScreen() {
               }}
             />
 
+            {/* Duration Input */}
             <TextInput
               style={styles.input}
               placeholder="Duration (minutes)"
+              placeholderTextColor={Colors.textTertiary}
               keyboardType="numeric"
               value={duration}
               onChangeText={setDuration}
             />
 
+            {/* Notes Input */}
             <TextInput
               style={[styles.input, styles.notesInput]}
               placeholder="Notes (optional)"
+              placeholderTextColor={Colors.textTertiary}
               multiline
               value={notes}
               onChangeText={setNotes}
             />
 
-            <View style={styles.buttonContainer}>
+            {/* Action Buttons */}
+            <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={() => setShowAddModal(false)}
@@ -154,12 +183,12 @@ export default function ActivitiesScreen() {
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.addButton} onPress={handleAddActivity}>
-                <Text style={styles.addButtonText}>Add</Text>
+                <Text style={styles.addButtonText}>Add Activity</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
-      )}
+      </Modal>
     </View>
   );
 }
@@ -167,177 +196,193 @@ export default function ActivitiesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: Colors.background,
   },
   listContent: {
-    padding: 15,
+    padding: Spacing.lg,
+    paddingBottom: 100,
   },
   activityCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  activityHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    ...Shadows.small,
+  },
+  activityIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.accent + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
+  },
+  activityContent: {
+    flex: 1,
   },
   activityName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.medium,
+    color: Colors.textPrimary,
+    marginBottom: 4,
   },
-  activityDuration: {
-    fontSize: 14,
-    color: '#4A90D9',
+  activityMeta: {
+    flexDirection: 'row',
+    gap: Spacing.md,
   },
-  activityNotes: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 8,
+  activityMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  activityMetaText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textTertiary,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: Spacing.xxl,
   },
-  emptyEmoji: {
-    fontSize: 60,
-    marginBottom: 15,
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
   },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 5,
+  emptyTitle: {
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#888',
+  emptySubtitle: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textTertiary,
     textAlign: 'center',
+    lineHeight: Typography.sizes.md * Typography.lineHeights.relaxed,
   },
   fab: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#4A90D9',
+    right: Spacing.xl,
+    bottom: Spacing.xl,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  fabText: {
-    fontSize: 30,
-    color: 'white',
-    marginTop: -2,
+    ...Shadows.large,
   },
   modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: Spacing.xl,
   },
   modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 25,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.xxl,
     width: '100%',
-    maxHeight: '80%',
+    maxHeight: '85%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 20,
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
   },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 10,
+  modalCloseButton: {
+    padding: Spacing.xs,
+  },
+  sectionLabel: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.medium,
+    color: Colors.textTertiary,
+    marginBottom: Spacing.md,
   },
   predefinedContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 15,
+    gap: Spacing.sm,
+    marginBottom: Spacing.xl,
   },
-  predefinedItem: {
-    backgroundColor: '#F0F0F0',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+  predefinedChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  predefinedItemSelected: {
-    backgroundColor: '#4A90D9',
+  predefinedChipSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
-  predefinedText: {
-    fontSize: 12,
-    color: '#666',
+  predefinedChipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
   },
-  predefinedTextSelected: {
-    color: 'white',
+  predefinedChipTextSelected: {
+    color: Colors.textInverse,
   },
   input: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 14,
-    marginBottom: 12,
-    backgroundColor: '#F9F9F9',
+    borderColor: Colors.border,
   },
   notesInput: {
     height: 80,
     textAlignVertical: 'top',
   },
-  buttonContainer: {
+  modalActions: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 5,
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
   },
   cancelButton: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 10,
-    padding: 12,
+    paddingVertical: Spacing.lg,
     alignItems: 'center',
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   cancelButtonText: {
-    color: '#666',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.medium,
+    color: Colors.textSecondary,
   },
   addButton: {
     flex: 1,
-    backgroundColor: '#4A90D9',
-    borderRadius: 10,
-    padding: 12,
+    paddingVertical: Spacing.lg,
     alignItems: 'center',
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.primary,
   },
   addButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textInverse,
   },
 });

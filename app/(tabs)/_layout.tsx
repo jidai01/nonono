@@ -1,54 +1,36 @@
 import { Tabs } from 'expo-router';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-function LogoIcon({ color, size }: { color: string; size: number }) {
-  return (
-    <View style={{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: color,
-      justifyContent: 'center',
-      alignItems: 'center',
-    }}>
-      <Ionicons name="pulse" size={size * 0.5} color="white" />
-    </View>
-  );
-}
+import { Colors, Typography, Shadows } from '../../src/types/theme';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#4A90D9',
-        tabBarInactiveTintColor: '#888',
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textTertiary,
         tabBarStyle: {
-          backgroundColor: 'white',
+          backgroundColor: Colors.surface,
           borderTopWidth: 0,
-          elevation: 10,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 5,
-          height: 65,
+          height: 70,
           paddingBottom: 10,
           paddingTop: 8,
+          ...Shadows.medium,
+        },
+        tabBarLabelStyle: {
+          fontSize: Typography.sizes.xs,
+          fontWeight: Typography.weights.medium,
+          marginTop: 2,
         },
         headerStyle: {
-          backgroundColor: '#4A90D9',
-          elevation: 5,
-          shadowColor: '#4A90D9',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 5,
+          backgroundColor: Colors.primary,
         },
-        headerTintColor: 'white',
+        headerTintColor: Colors.textInverse,
         headerTitleStyle: {
-          fontWeight: '700',
-          fontSize: 18,
-          letterSpacing: 0.5,
+          fontWeight: Typography.weights.semibold,
+          fontSize: Typography.sizes.lg,
         },
+        headerShadowVisible: false,
       }}
     >
       <Tabs.Screen
@@ -56,7 +38,18 @@ export default function TabLayout() {
         options={{
           title: 'Calendar',
           headerTitle: 'Recovery Calendar',
-          tabBarIcon: ({ color, size }) => <LogoIcon color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => (
+            <View style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: color + '15',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <Ionicons name="calendar" size={22} color={color} />
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
@@ -64,7 +57,18 @@ export default function TabLayout() {
         options={{
           title: 'Journal',
           headerTitle: 'Daily Journal',
-          tabBarIcon: ({ color, size }) => <Ionicons name="book" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <View style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: color + '15',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <Ionicons name="book" size={22} color={color} />
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
@@ -72,7 +76,18 @@ export default function TabLayout() {
         options={{
           title: 'Activities',
           headerTitle: 'Prevention Activities',
-          tabBarIcon: ({ color, size }) => <Ionicons name="fitness" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <View style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: color + '15',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <Ionicons name="fitness" size={22} color={color} />
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
@@ -80,7 +95,18 @@ export default function TabLayout() {
         options={{
           title: 'Schedule',
           headerTitle: 'Schedule & Reminders',
-          tabBarIcon: ({ color, size }) => <Ionicons name="alarm" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <View style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: color + '15',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <Ionicons name="alarm" size={22} color={color} />
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
@@ -88,7 +114,18 @@ export default function TabLayout() {
         options={{
           title: 'Settings',
           headerTitle: 'Settings',
-          tabBarIcon: ({ color, size }) => <Ionicons name="settings" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <View style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: color + '15',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <Ionicons name="settings" size={22} color={color} />
+            </View>
+          ),
         }}
       />
     </Tabs>

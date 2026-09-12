@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/stores/authStore';
 import * as LocalAuth from 'expo-local-authentication';
 import * as FileSystem from 'expo-file-system';
@@ -9,6 +10,7 @@ import { ExportData } from '../../src/types';
 import { encryptData, decryptData } from '../../src/utils/crypto';
 import { getAllEntries, getAllSchedules } from '../../src/db/queries';
 import { updateBiometricSetting } from '../../src/utils/auth';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -46,7 +48,7 @@ export default function SettingsScreen() {
   const handleExport = async () => {
     Alert.prompt(
       'Enter Passphrase',
-      'Passphrase will be used to encrypt your data',
+      'This passphrase will encrypt your data',
       async (passphrase) => {
         if (!passphrase) return;
 
@@ -121,7 +123,7 @@ export default function SettingsScreen() {
         'secure-text'
       );
     } catch (error) {
-      Alert.alert('Error', 'Gagal memilih file');
+      Alert.alert('Error', 'Failed to select file');
     }
   };
 
@@ -137,68 +139,90 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Security Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Security</Text>
-
-        {hasBiometric && (
-          <View style={styles.settingRow}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Biometrics</Text>
-              <Text style={styles.settingDescription}>
-                Use fingerprint or Face ID to login
-              </Text>
+        <View style={styles.sectionContent}>
+          {hasBiometric && (
+            <View style={styles.settingRow}>
+              <View style={styles.settingIconContainer}>
+                <Ionicons name="finger-print" size={20} color={Colors.primary} />
+              </View>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Biometrics</Text>
+                <Text style={styles.settingDescription}>
+                  Use fingerprint or Face ID to login
+                </Text>
+              </View>
+              <Switch
+                value={biometricEnabled}
+                onValueChange={toggleBiometric}
+                trackColor={{ false: Colors.border, true: Colors.primary + '50' }}
+                thumbColor={biometricEnabled ? Colors.primary : Colors.textTertiary}
+              />
             </View>
-            <Switch
-              value={biometricEnabled}
-              onValueChange={toggleBiometric}
-              trackColor={{ false: '#DDD', true: '#4A90D9' }}
-            />
-          </View>
-        )}
+          )}
+        </View>
       </View>
 
+      {/* Data Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Data</Text>
+        <View style={styles.sectionContent}>
+          <TouchableOpacity style={styles.settingRow} onPress={handleExport}>
+            <View style={styles.settingIconContainer}>
+              <Ionicons name="cloud-upload" size={20} color={Colors.primary} />
+            </View>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Export Data</Text>
+              <Text style={styles.settingDescription}>
+                Export your data in encrypted format
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingRow} onPress={handleExport}>
-          <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Export Data</Text>
-            <Text style={styles.settingDescription}>
-              Export your data in encrypted format
-            </Text>
-          </View>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
+          <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.settingRow} onPress={handleImport}>
-          <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Import Data</Text>
-            <Text style={styles.settingDescription}>
-              Import data from a previous backup
-            </Text>
-          </View>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.settingRow} onPress={handleImport}>
+            <View style={styles.settingIconContainer}>
+              <Ionicons name="cloud-download" size={20} color={Colors.primary} />
+            </View>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Import Data</Text>
+              <Text style={styles.settingDescription}>
+                Import data from a previous backup
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
+      {/* Account Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
-
-        <TouchableOpacity style={styles.settingRow} onPress={handleLogout}>
-          <View style={styles.settingInfo}>
-            <Text style={[styles.settingLabel, { color: '#FF6B6B' }]}>Logout</Text>
-            <Text style={styles.settingDescription}>
-              Log out from the app
-            </Text>
-          </View>
-          <Text style={[styles.arrow, { color: '#FF6B6B' }]}>›</Text>
-        </TouchableOpacity>
+        <View style={styles.sectionContent}>
+          <TouchableOpacity style={styles.settingRow} onPress={handleLogout}>
+            <View style={[styles.settingIconContainer, { backgroundColor: Colors.error + '15' }]}>
+              <Ionicons name="log-out" size={20} color={Colors.error} />
+            </View>
+            <View style={styles.settingInfo}>
+              <Text style={[styles.settingLabel, { color: Colors.error }]}>Logout</Text>
+              <Text style={styles.settingDescription}>
+                Log out from the app
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
+      {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>Nonono v1.0.0</Text>
-        <Text style={styles.footerText}>Data is stored locally on device</Text>
+        <Text style={styles.footerSubtext}>Data is stored locally on your device</Text>
       </View>
     </ScrollView>
   );
@@ -207,51 +231,73 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: Colors.background,
   },
   section: {
-    backgroundColor: 'white',
-    marginTop: 15,
-    paddingHorizontal: 15,
+    marginTop: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
   },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#888',
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textTertiary,
     textTransform: 'uppercase',
-    paddingVertical: 15,
+    letterSpacing: 0.5,
+    marginBottom: Spacing.md,
+    marginLeft: Spacing.xs,
+  },
+  sectionContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    ...Shadows.small,
   },
   settingRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#EEE',
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+  },
+  settingIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
   },
   settingInfo: {
     flex: 1,
   },
   settingLabel: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 3,
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.medium,
+    color: Colors.textPrimary,
+    marginBottom: 2,
   },
   settingDescription: {
-    fontSize: 12,
-    color: '#888',
+    fontSize: Typography.sizes.sm,
+    color: Colors.textTertiary,
   },
-  arrow: {
-    fontSize: 24,
-    color: '#CCC',
+  divider: {
+    height: 1,
+    backgroundColor: Colors.borderLight,
+    marginLeft: 72,
   },
   footer: {
     alignItems: 'center',
-    padding: 30,
+    paddingVertical: Spacing.xxxxl,
+    marginTop: Spacing.xl,
   },
   footerText: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 5,
+    fontSize: Typography.sizes.sm,
+    color: Colors.textTertiary,
+    fontWeight: Typography.weights.medium,
+    marginBottom: Spacing.xs,
+  },
+  footerSubtext: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textTertiary,
   },
 });

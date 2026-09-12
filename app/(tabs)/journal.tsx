@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useJournalStore } from '../../src/stores/journalStore';
-import { MOOD_EMOJIS, MOOD_LABELS, JournalEntry } from '../../src/types';
+import { MOOD_EMOJIS, JournalEntry } from '../../src/types';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function JournalScreen() {
   const router = useRouter();
@@ -22,41 +24,59 @@ export default function JournalScreen() {
     <TouchableOpacity
       style={[styles.entryCard, item.is_relapse && styles.relapseCard]}
       onPress={() => router.push(`/entry/${item.date}`)}
+      activeOpacity={0.7}
     >
       <View style={styles.entryHeader}>
-        <Text style={styles.entryDate}>{item.date}</Text>
+        <View style={styles.entryDateContainer}>
+          <Text style={styles.entryDate}>{item.date}</Text>
+          {item.is_relapse && (
+            <View style={styles.relapseBadge}>
+              <Text style={styles.relapseBadgeText}>Relapse</Text>
+            </View>
+          )}
+        </View>
         <View style={styles.moodContainer}>
           <Text style={styles.moodEmoji}>{MOOD_EMOJIS[item.mood as keyof typeof MOOD_EMOJIS]}</Text>
-          <Text style={styles.moodText}>{MOOD_LABELS[item.mood as keyof typeof MOOD_LABELS]}</Text>
         </View>
       </View>
       {item.feelings ? (
-        <Text style={styles.entryContent} numberOfLines={3}>
+        <Text style={styles.entryContent} numberOfLines={2}>
           {item.feelings}
         </Text>
       ) : null}
-      {item.is_relapse && (
-        <View style={styles.relapseBadge}>
-          <Text style={styles.relapseText}>Relapse</Text>
-        </View>
-      )}
+      <View style={styles.entryFooter}>
+        <Ionicons name="chevron-forward" size={16} color={Colors.textTertiary} />
+      </View>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Search entries..."
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={18} color={Colors.textTertiary} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search entries..."
+          placeholderTextColor={Colors.textTertiary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+            <Ionicons name="close-circle" size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        )}
+      </View>
 
+      {/* Entries List */}
       {filteredEntries.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>📝</Text>
-          <Text style={styles.emptyText}>No journal entries yet</Text>
-          <Text style={styles.emptySubtext}>Start recording your daily feelings</Text>
+          <View style={styles.emptyIconContainer}>
+            <Ionicons name="book-outline" size={48} color={Colors.primary} />
+          </View>
+          <Text style={styles.emptyTitle}>No Journal Entries</Text>
+          <Text style={styles.emptySubtitle}>Start recording your daily feelings and thoughts</Text>
         </View>
       ) : (
         <FlatList
@@ -64,14 +84,17 @@ export default function JournalScreen() {
           renderItem={renderEntry}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
         />
       )}
 
+      {/* FAB */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => router.push('/entry/new')}
+        activeOpacity={0.8}
       >
-        <Text style={styles.fabText}>+</Text>
+        <Ionicons name="add" size={28} color={Colors.textInverse} />
       </TouchableOpacity>
     </View>
   );
@@ -80,113 +103,130 @@ export default function JournalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: Colors.background,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    ...Shadows.small,
+  },
+  searchIcon: {
+    marginRight: Spacing.sm,
   },
   searchInput: {
-    backgroundColor: 'white',
-    padding: 15,
-    margin: 15,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#EEE',
+    flex: 1,
+    paddingVertical: Spacing.lg,
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
+  },
+  clearButton: {
+    padding: Spacing.xs,
   },
   listContent: {
-    padding: 15,
+    padding: Spacing.lg,
+    paddingBottom: 100,
   },
   entryCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    ...Shadows.small,
   },
   relapseCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#FF6B6B',
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.error,
   },
   entryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
+    alignItems: 'flex-start',
+    marginBottom: Spacing.sm,
   },
-  entryDate: {
-    fontSize: 14,
-    color: '#888',
-  },
-  moodContainer: {
+  entryDateContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: Spacing.sm,
+  },
+  entryDate: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    fontWeight: Typography.weights.medium,
+  },
+  relapseBadge: {
+    backgroundColor: Colors.error + '15',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
+  },
+  relapseBadgeText: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.error,
+    fontWeight: Typography.weights.medium,
+  },
+  moodContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   moodEmoji: {
     fontSize: 20,
   },
-  moodText: {
-    fontSize: 12,
-    color: '#666',
-  },
   entryContent: {
-    fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.md * Typography.lineHeights.relaxed,
+    marginBottom: Spacing.sm,
   },
-  relapseBadge: {
-    backgroundColor: '#FFE5E5',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
-    alignSelf: 'flex-start',
-    marginTop: 10,
-  },
-  relapseText: {
-    color: '#FF6B6B',
-    fontSize: 12,
-    fontWeight: '600',
+  entryFooter: {
+    alignItems: 'flex-end',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: Spacing.xxl,
   },
-  emptyEmoji: {
-    fontSize: 60,
-    marginBottom: 15,
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
   },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 5,
+  emptyTitle: {
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#888',
+  emptySubtitle: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textTertiary,
+    textAlign: 'center',
+    lineHeight: Typography.sizes.md * Typography.lineHeights.relaxed,
   },
   fab: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#4A90D9',
+    right: Spacing.xl,
+    bottom: Spacing.xl,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  fabText: {
-    fontSize: 30,
-    color: 'white',
-    marginTop: -2,
+    ...Shadows.large,
   },
 });

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Switch, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useScheduleStore } from '../../src/stores/scheduleStore';
 import { DAY_NAMES, Schedule } from '../../src/types';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function ScheduleScreen() {
   const router = useRouter();
@@ -29,8 +31,11 @@ export default function ScheduleScreen() {
   };
 
   const renderSchedule = ({ item }: { item: Schedule }) => (
-    <View style={[styles.scheduleCard, !item.is_active && styles.inactiveCard]}>
+    <View style={[styles.scheduleCard, !item.is_active && styles.scheduleCardInactive]}>
       <View style={styles.scheduleHeader}>
+        <View style={styles.scheduleIconContainer}>
+          <Ionicons name="time" size={20} color={Colors.primary} />
+        </View>
         <View style={styles.scheduleInfo}>
           <Text style={styles.scheduleTitle}>{item.title}</Text>
           <Text style={styles.scheduleTime}>{item.time}</Text>
@@ -39,7 +44,8 @@ export default function ScheduleScreen() {
         <Switch
           value={item.is_active}
           onValueChange={(value) => toggleSchedule(item.id, value)}
-          trackColor={{ false: '#DDD', true: '#4A90D9' }}
+          trackColor={{ false: Colors.border, true: Colors.primary + '50' }}
+          thumbColor={item.is_active ? Colors.primary : Colors.textTertiary}
         />
       </View>
       {item.description ? (
@@ -49,6 +55,7 @@ export default function ScheduleScreen() {
         style={styles.deleteButton}
         onPress={() => handleDeleteSchedule(item.id)}
       >
+        <Ionicons name="trash-outline" size={16} color={Colors.error} />
         <Text style={styles.deleteButtonText}>Delete</Text>
       </TouchableOpacity>
     </View>
@@ -56,33 +63,41 @@ export default function ScheduleScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.daySelector}>
-        {DAY_NAMES.map((day, index) => (
-          <TouchableOpacity
-            key={day}
-            style={[
-              styles.dayButton,
-              selectedDay === index && styles.dayButtonSelected,
-            ]}
-            onPress={() => setSelectedDay(selectedDay === index ? null : index)}
-          >
-            <Text
+      {/* Day Selector */}
+      <View style={styles.daySelectorContainer}>
+        <FlatList
+          data={DAY_NAMES}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.daySelector}
+          keyExtractor={(item, index) => item}
+          renderItem={({ item, index }) => (
+            <TouchableOpacity
               style={[
+                styles.dayButton,
+                selectedDay === index && styles.dayButtonSelected,
+              ]}
+              onPress={() => setSelectedDay(selectedDay === index ? null : index)}
+            >
+              <Text style={[
                 styles.dayText,
                 selectedDay === index && styles.dayTextSelected,
-              ]}
-            >
-              {day.substring(0, 3)}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              ]}>
+                {item.substring(0, 3)}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
       </View>
 
+      {/* Schedules List */}
       {filteredSchedules.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>⏰</Text>
-          <Text style={styles.emptyText}>No schedules yet</Text>
-          <Text style={styles.emptySubtext}>Create reminders for prevention activities</Text>
+          <View style={styles.emptyIconContainer}>
+            <Ionicons name="alarm-outline" size={48} color={Colors.primary} />
+          </View>
+          <Text style={styles.emptyTitle}>No Schedules</Text>
+          <Text style={styles.emptySubtitle}>Create reminders for your prevention activities</Text>
         </View>
       ) : (
         <FlatList
@@ -90,14 +105,17 @@ export default function ScheduleScreen() {
           renderItem={renderSchedule}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
         />
       )}
 
+      {/* FAB */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => router.push('/schedule/new')}
+        activeOpacity={0.8}
       >
-        <Text style={styles.fabText}>+</Text>
+        <Ionicons name="add" size={28} color={Colors.textInverse} />
       </TouchableOpacity>
     </View>
   );
@@ -106,132 +124,140 @@ export default function ScheduleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: Colors.background,
+  },
+  daySelectorContainer: {
+    backgroundColor: Colors.surface,
+    ...Shadows.small,
   },
   daySelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 15,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    gap: Spacing.sm,
   },
   dayButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#F0F0F0',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   dayButtonSelected: {
-    backgroundColor: '#4A90D9',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   dayText: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '600',
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.medium,
+    color: Colors.textSecondary,
   },
   dayTextSelected: {
-    color: 'white',
+    color: Colors.textInverse,
   },
   listContent: {
-    padding: 15,
+    padding: Spacing.lg,
+    paddingBottom: 100,
   },
   scheduleCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    ...Shadows.small,
   },
-  inactiveCard: {
+  scheduleCardInactive: {
     opacity: 0.6,
   },
   scheduleHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+  },
+  scheduleIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
   },
   scheduleInfo: {
     flex: 1,
   },
   scheduleTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 5,
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: 2,
   },
   scheduleTime: {
-    fontSize: 14,
-    color: '#4A90D9',
-    fontWeight: '600',
+    fontSize: Typography.sizes.sm,
+    color: Colors.primary,
+    fontWeight: Typography.weights.medium,
   },
   scheduleDay: {
-    fontSize: 12,
-    color: '#888',
+    fontSize: Typography.sizes.xs,
+    color: Colors.textTertiary,
     marginTop: 2,
   },
   scheduleDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 10,
-    paddingTop: 10,
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#EEE',
+    borderTopColor: Colors.borderLight,
   },
   deleteButton: {
-    marginTop: 10,
-    paddingVertical: 8,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.xs,
+    marginTop: Spacing.md,
+    paddingVertical: Spacing.sm,
   },
   deleteButtonText: {
-    color: '#FF6B6B',
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: Typography.sizes.sm,
+    color: Colors.error,
+    fontWeight: Typography.weights.medium,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: Spacing.xxl,
   },
-  emptyEmoji: {
-    fontSize: 60,
-    marginBottom: 15,
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
   },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 5,
+  emptyTitle: {
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#888',
+  emptySubtitle: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textTertiary,
     textAlign: 'center',
+    lineHeight: Typography.sizes.md * Typography.lineHeights.relaxed,
   },
   fab: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#4A90D9',
+    right: Spacing.xl,
+    bottom: Spacing.xl,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  fabText: {
-    fontSize: 30,
-    color: 'white',
-    marginTop: -2,
+    ...Shadows.large,
   },
 });

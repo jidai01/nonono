@@ -1,18 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useJournalStore } from '../../src/stores/journalStore';
-import { MOOD_EMOJIS, MOOD_LABELS, MoodLevel } from '../../src/types';
-import * as Crypto from 'expo-crypto';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function CalendarScreen() {
   const router = useRouter();
-  const { entries, loadEntriesByMonth, loadEntryByDate, saveEntry } = useJournalStore();
+  const { entries, loadEntriesByMonth, loadEntryByDate } = useJournalStore();
   const [selectedDate, setSelectedDate] = useState('');
-  const [showMoodModal, setShowMoodModal] = useState(false);
-  const [selectedMood, setSelectedMood] = useState<MoodLevel>(3);
-  const [isRelapse, setIsRelapse] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -22,9 +19,9 @@ export default function CalendarScreen() {
   const markedDates = entries.reduce((acc, entry) => {
     acc[entry.date] = {
       marked: true,
-      dotColor: entry.is_relapse ? '#FF6B6B' : '#4CAF50',
+      dotColor: entry.is_relapse ? Colors.calendarRelapse : Colors.calendarSober,
       selected: entry.date === selectedDate,
-      selectedColor: entry.is_relapse ? '#FF6B6B' : '#4CAF50',
+      selectedColor: entry.is_relapse ? Colors.calendarRelapse : Colors.primary,
     };
     return acc;
   }, {} as Record<string, any>);
@@ -39,56 +36,75 @@ export default function CalendarScreen() {
     loadEntriesByMonth(month.year, month.month);
   }, []);
 
-  const currentStreak = entries.filter(e => !e.is_relapse).length;
+  const soberDays = entries.filter(e => !e.is_relapse).length;
+  const relapseDays = entries.filter(e => e.is_relapse).length;
 
   return (
     <View style={styles.container}>
+      {/* Stats Header */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{currentStreak}</Text>
-          <Text style={styles.statLabel}>Day Streak</Text>
+          <View style={[styles.statIconContainer, { backgroundColor: Colors.success + '20' }]}>
+            <Ionicons name="flame" size={20} color={Colors.success} />
+          </View>
+          <Text style={styles.statValue}>{soberDays}</Text>
+          <Text style={styles.statLabel}>Sober Days</Text>
         </View>
+        <View style={styles.statDivider} />
         <View style={styles.statCard}>
+          <View style={[styles.statIconContainer, { backgroundColor: Colors.primary + '20' }]}>
+            <Ionicons name="calendar" size={20} color={Colors.primary} />
+          </View>
           <Text style={styles.statValue}>{entries.length}</Text>
           <Text style={styles.statLabel}>Total Entries</Text>
         </View>
+        <View style={styles.statDivider} />
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{entries.filter(e => e.is_relapse).length}</Text>
+          <View style={[styles.statIconContainer, { backgroundColor: Colors.error + '20' }]}>
+            <Ionicons name="alert-circle" size={20} color={Colors.error} />
+          </View>
+          <Text style={styles.statValue}>{relapseDays}</Text>
           <Text style={styles.statLabel}>Relapses</Text>
         </View>
       </View>
 
-      <Calendar
-        markedDates={markedDates}
-        onDayPress={handleDayPress}
-        onMonthChange={handleMonthChange}
-        theme={{
-          backgroundColor: '#ffffff',
-          calendarBackground: '#ffffff',
-          textSectionTitleColor: '#b6c1cd',
-          selectedDayBackgroundColor: '#4A90D9',
-          selectedDayTextColor: '#ffffff',
-          todayTextColor: '#4A90D9',
-          dayTextColor: '#2d4150',
-          textDisabledColor: '#d9e1e8',
-          monthTextColor: '#2d4150',
-          arrowColor: '#4A90D9',
-          textMonthFontWeight: 'bold',
-        }}
-        style={styles.calendar}
-      />
+      {/* Calendar */}
+      <View style={styles.calendarContainer}>
+        <Calendar
+          markedDates={markedDates}
+          onDayPress={handleDayPress}
+          onMonthChange={handleMonthChange}
+          theme={{
+            backgroundColor: Colors.surface,
+            calendarBackground: Colors.surface,
+            textSectionTitleColor: Colors.textTertiary,
+            selectedDayBackgroundColor: Colors.primary,
+            selectedDayTextColor: Colors.textInverse,
+            todayTextColor: Colors.primary,
+            dayTextColor: Colors.textPrimary,
+            textDisabledColor: Colors.border,
+            monthTextColor: Colors.textPrimary,
+            arrowColor: Colors.primary,
+            textMonthFontWeight: Typography.weights.semibold,
+            textDayFontSize: Typography.sizes.md,
+            textMonthFontSize: Typography.sizes.lg,
+          }}
+          style={styles.calendar}
+        />
+      </View>
 
-      <View style={styles.legend}>
+      {/* Legend */}
+      <View style={styles.legendContainer}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#4CAF50' }]} />
+          <View style={[styles.legendDot, { backgroundColor: Colors.calendarSober }]} />
           <Text style={styles.legendText}>Sober Day</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#FF6B6B' }]} />
+          <View style={[styles.legendDot, { backgroundColor: Colors.calendarRelapse }]} />
           <Text style={styles.legendText}>Relapse</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#DDD' }]} />
+          <View style={[styles.legendDot, { backgroundColor: Colors.calendarEmpty }]} />
           <Text style={styles.legendText}>No Entry</Text>
         </View>
       </View>
@@ -99,43 +115,69 @@ export default function CalendarScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: Colors.background,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    padding: 15,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    backgroundColor: Colors.surface,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    ...Shadows.small,
   },
   statCard: {
     alignItems: 'center',
+    flex: 1,
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#4A90D9',
+    fontSize: Typography.sizes.xxl,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 5,
+    fontSize: Typography.sizes.xs,
+    color: Colors.textTertiary,
+    marginTop: 2,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: Colors.border,
+  },
+  calendarContainer: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    ...Shadows.small,
   },
   calendar: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    borderRadius: BorderRadius.lg,
   },
-  legend: {
+  legendContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    padding: 15,
-    gap: 20,
+    gap: Spacing.xl,
+    paddingVertical: Spacing.xl,
+    marginTop: Spacing.lg,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: Spacing.sm,
   },
   legendDot: {
     width: 10,
@@ -143,7 +185,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   legendText: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
   },
 });
