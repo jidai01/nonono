@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Schedule } from '../types';
 import * as db from '../db/queries';
 import * as Crypto from 'expo-crypto';
+import { scheduleDateNotification, cancelNotification } from '../utils/notifications';
 
 interface ScheduleState {
   schedules: Schedule[];
@@ -32,6 +33,17 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
   addSchedule: async (schedule) => {
     const id = Crypto.randomUUID();
     await db.upsertSchedule({ ...schedule, id });
+
+    if (schedule.is_active) {
+      await scheduleDateNotification(
+        schedule.title,
+        schedule.description || 'Time for your activity!',
+        schedule.date,
+        schedule.time,
+        `schedule_${id}`
+      );
+    }
+
     const schedules = await db.getAllSchedules();
     set({ schedules });
   },
@@ -40,6 +52,19 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
     const schedule = useScheduleStore.getState().schedules.find(s => s.id === id);
     if (schedule) {
       await db.upsertSchedule({ ...schedule, is_active: isActive });
+
+      if (isActive) {
+        await scheduleDateNotification(
+          schedule.title,
+          schedule.description || 'Time for your activity!',
+          schedule.date,
+          schedule.time,
+          `schedule_${id}`
+        );
+      } else {
+        await cancelNotification(`schedule_${id}`);
+      }
+
       const schedules = await db.getAllSchedules();
       set({ schedules });
     }
@@ -47,6 +72,7 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
 
   deleteSchedule: async (id) => {
     await db.deleteSchedule(id);
+    await cancelNotification(`schedule_${id}`);
     const schedules = await db.getAllSchedules();
     set({ schedules });
   },
