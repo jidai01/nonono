@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../src/stores/authStore';
+import { Colors } from '../src/types/theme';
 
 export default function IndexScreen() {
   const router = useRouter();
@@ -11,14 +12,12 @@ export default function IndexScreen() {
     if (loading) return;
 
     const timer = setTimeout(() => {
-      if (!isSetupComplete) {
-        router.replace('/auth');
-      } else if (!isAuthenticated) {
+      if (!isSetupComplete || !isAuthenticated) {
         router.replace('/auth');
       } else {
-        router.replace('/(tabs)');
+        router.replace('/(tabs)/calendar');
       }
-    }, 100);
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [isSetupComplete, isAuthenticated, loading]);
@@ -26,14 +25,14 @@ export default function IndexScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#3D8B8B" />
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#3D8B8B" />
+      <ActivityIndicator size="large" color={Colors.primary} />
     </View>
   );
 }
@@ -43,6 +42,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F4F7F6',
+    backgroundColor: Colors.background,
   },
 });

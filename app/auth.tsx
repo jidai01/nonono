@@ -33,7 +33,7 @@ export default function AuthScreen() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/calendar');
     }
   }, [isAuthenticated]);
 
@@ -69,7 +69,7 @@ export default function AuthScreen() {
   const handleLogin = async () => {
     const success = await login(password);
     if (success) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/calendar');
     } else {
       Alert.alert('Error', 'Wrong password');
     }
@@ -78,7 +78,7 @@ export default function AuthScreen() {
   const handleBiometricLogin = async () => {
     const success = await loginWithBiometric();
     if (success) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/calendar');
     }
   };
 
