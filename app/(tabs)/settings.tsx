@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert, ScrollView, TextInput, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert, ScrollView, TextInput, Modal, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/stores/authStore';
 import * as FileSystem from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
+import * as MediaLibrary from 'expo-media-library';
 import { ExportData } from '../../src/types';
 import { encryptData, decryptData } from '../../src/utils/crypto';
 import { getAllEntries, getAllSchedules } from '../../src/db/queries';
@@ -175,6 +176,14 @@ export default function SettingsScreen() {
   };
 
   const handleExport = async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Storage permission is needed to export data.');
+        return;
+      }
+    }
+
     Alert.prompt(
       'Enter Passphrase',
       'This passphrase will encrypt your data',
@@ -200,12 +209,25 @@ export default function SettingsScreen() {
           };
 
           const encrypted = await encryptData(exportData, passphrase);
-          const fileUri = `${FileSystem.documentDirectory}nonono_backup_${Date.now()}.encrypted`;
+          const fileName = `nonono_backup_${Date.now()}.encrypted`;
+          const fileUri = `${FileSystem.documentDirectory}${fileName}`;
           await FileSystem.writeAsStringAsync(fileUri, encrypted);
+
+          if (Platform.OS !== 'web') {
+            try {
+              const asset = await MediaLibrary.createAssetAsync(fileUri);
+              const album = await MediaLibrary.getAlbumAsync('nonono');
+              if (album) {
+                await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+              } else {
+                await MediaLibrary.createAlbumAsync('nonono', asset, false);
+              }
+            } catch {}
+          }
 
           Alert.alert(
             'Export Successful',
-            `Data has been saved to:\n${fileUri}`,
+            `Data has been saved as:\n${fileName}`,
             [{ text: 'OK' }]
           );
         } catch (error) {
