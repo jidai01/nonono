@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAddictionStore } from '../../src/stores/addictionStore';
 import { Addiction, PREDEFINED_ADDICTIONS } from '../../src/types';
@@ -20,6 +20,28 @@ export default function AddictionDropdown() {
   const handleSelect = (addiction: Addiction) => {
     setCurrentAddiction(addiction.id);
     setShowDropdown(false);
+  };
+
+  const handleDelete = (addiction: Addiction) => {
+    if (addictions.length <= 1) {
+      Alert.alert('Error', 'Cannot delete the last addiction');
+      return;
+    }
+    setShowDropdown(false);
+    setTimeout(() => {
+      Alert.alert(
+        'Delete Addiction',
+        `Delete "${addiction.name}" and all its data? This cannot be undone.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => deleteAddiction(addiction.id),
+          },
+        ]
+      );
+    }, 300);
   };
 
   const handleAdd = async () => {
@@ -44,40 +66,21 @@ export default function AddictionDropdown() {
     setNewColor('#3D8B8B');
   };
 
-  const handleDelete = (addiction: Addiction) => {
-    if (addictions.length <= 1) {
-      Alert.alert('Error', 'Cannot delete the last addiction');
-      return;
-    }
-    Alert.alert(
-      'Delete Addiction',
-      `Delete "${addiction.name}" and all its data? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => deleteAddiction(addiction.id),
-        },
-      ]
-    );
-  };
-
   const openEditModal = (addiction: Addiction) => {
     setEditingAddiction(addiction);
     setNewName(addiction.name);
     setNewIcon(addiction.icon);
     setNewColor(addiction.color);
-    setShowEditModal(true);
     setShowDropdown(false);
+    setTimeout(() => setShowEditModal(true), 300);
   };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.dropdownButton} onPress={() => setShowDropdown(true)}>
         <Text style={styles.currentIcon}>{currentAddiction?.icon || '🎯'}</Text>
-        <Text style={styles.currentName} numberOfLines={1}>{currentAddiction?.name || 'Select Addiction'}</Text>
-        <Ionicons name="chevron-down" size={16} color={Colors.textSecondary} />
+        <Text style={styles.currentName} numberOfLines={1}>{currentAddiction?.name || 'Select'}</Text>
+        <Ionicons name="chevron-down" size={14} color={Colors.textSecondary} />
       </TouchableOpacity>
 
       {/* Dropdown Modal */}
@@ -86,23 +89,34 @@ export default function AddictionDropdown() {
           <View style={styles.dropdown}>
             <Text style={styles.dropdownTitle}>Switch Addiction</Text>
             {addictions.map(addiction => (
-              <TouchableOpacity
-                key={addiction.id}
-                style={[styles.dropdownItem, addiction.id === currentAddictionId && styles.dropdownItemActive]}
-                onPress={() => handleSelect(addiction)}
-                onLongPress={() => openEditModal(addiction)}
-              >
-                <Text style={styles.dropdownItemIcon}>{addiction.icon}</Text>
-                <Text style={[styles.dropdownItemName, addiction.id === currentAddictionId && styles.dropdownItemNameActive]}>
-                  {addiction.name}
-                </Text>
-                {addiction.id === currentAddictionId && (
-                  <Ionicons name="checkmark" size={20} color={Colors.primary} />
+              <View key={addiction.id} style={styles.dropdownItemRow}>
+                <TouchableOpacity
+                  style={[styles.dropdownItem, addiction.id === currentAddictionId && styles.dropdownItemActive]}
+                  onPress={() => handleSelect(addiction)}
+                  onLongPress={() => openEditModal(addiction)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.dropdownItemIcon}>{addiction.icon}</Text>
+                  <Text style={[styles.dropdownItemName, addiction.id === currentAddictionId && styles.dropdownItemNameActive]}>
+                    {addiction.name}
+                  </Text>
+                  {addiction.id === currentAddictionId && (
+                    <Ionicons name="checkmark" size={20} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+                {addictions.length > 1 && (
+                  <TouchableOpacity
+                    style={styles.deleteIconButton}
+                    onPress={() => handleDelete(addiction)}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="trash-outline" size={16} color={Colors.error} />
+                  </TouchableOpacity>
                 )}
-              </TouchableOpacity>
+              </View>
             ))}
             <View style={styles.dropdownDivider} />
-            <TouchableOpacity style={styles.dropdownAddButton} onPress={() => { setShowDropdown(false); setShowAddModal(true); }}>
+            <TouchableOpacity style={styles.dropdownAddButton} onPress={() => { setShowDropdown(false); setTimeout(() => setShowAddModal(true), 300); }}>
               <Ionicons name="add-circle" size={20} color={Colors.primary} />
               <Text style={styles.dropdownAddText}>Add New Addiction</Text>
             </TouchableOpacity>
@@ -112,9 +126,14 @@ export default function AddictionDropdown() {
 
       {/* Add Modal */}
       <Modal visible={showAddModal} transparent animationType="slide">
-        <View style={styles.overlay}>
-          <View style={styles.addModal}>
-            <Text style={styles.addModalTitle}>New Addiction</Text>
+        <TouchableOpacity style={styles.overlay} onPress={() => setShowAddModal(false)} activeOpacity={1}>
+          <View style={styles.addModal} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.addModalTitle}>New Addiction</Text>
+              <TouchableOpacity onPress={() => setShowAddModal(false)}>
+                <Ionicons name="close" size={24} color={Colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
             <TextInput
               style={styles.input}
               placeholder="Name (e.g., Gaming)"
@@ -143,14 +162,19 @@ export default function AddictionDropdown() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
       </Modal>
 
       {/* Edit Modal */}
       <Modal visible={showEditModal} transparent animationType="slide">
-        <View style={styles.overlay}>
-          <View style={styles.addModal}>
-            <Text style={styles.addModalTitle}>Edit Addiction</Text>
+        <TouchableOpacity style={styles.overlay} onPress={() => setShowEditModal(false)} activeOpacity={1}>
+          <View style={styles.addModal} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.addModalTitle}>Edit Addiction</Text>
+              <TouchableOpacity onPress={() => setShowEditModal(false)}>
+                <Ionicons name="close" size={24} color={Colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
             <TextInput
               style={styles.input}
               placeholder="Name"
@@ -171,25 +195,15 @@ export default function AddictionDropdown() {
               ))}
             </View>
             <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={[styles.cancelButton, addictions.length <= 1 && { opacity: 0.4 }]}
-                onPress={() => {
-                  if (editingAddiction && addictions.length > 1) {
-                    setShowEditModal(false);
-                    handleDelete(editingAddiction);
-                  }
-                }}
-                disabled={addictions.length <= 1}
-              >
-                <Ionicons name="trash" size={18} color={Colors.error} />
-                <Text style={[styles.cancelButtonText, { color: Colors.error }]}>Delete</Text>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowEditModal(false)}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.confirmButton} onPress={handleEdit}>
                 <Text style={styles.confirmButtonText}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -209,13 +223,13 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   currentIcon: {
-    fontSize: 18,
+    fontSize: 16,
   },
   currentName: {
     fontSize: Typography.sizes.sm,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
-    maxWidth: 120,
+    maxWidth: 100,
   },
   overlay: {
     flex: 1,
@@ -238,7 +252,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     paddingHorizontal: Spacing.sm,
   },
+  dropdownItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   dropdownItem: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.md,
@@ -259,6 +278,10 @@ const styles = StyleSheet.create({
   dropdownItemNameActive: {
     fontWeight: Typography.weights.semibold,
     color: Colors.primary,
+  },
+  deleteIconButton: {
+    padding: Spacing.sm,
+    marginRight: Spacing.xs,
   },
   dropdownDivider: {
     height: 1,
@@ -284,11 +307,16 @@ const styles = StyleSheet.create({
     width: 320,
     ...Shadows.large,
   },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
   addModalTitle: {
     fontSize: Typography.sizes.lg,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
-    marginBottom: Spacing.lg,
   },
   input: {
     backgroundColor: Colors.background,
