@@ -19,7 +19,15 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.nonono.app"
+      "package": "com.nonono.app",
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ],
+      "statusBar": {
+        "style": "dark",
+        "backgroundColor": "#F4F7F6"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -46,6 +54,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d1ca6001-5d7e-4440-89c4-d8be3f04ccb2"
+      }
     }
   }
 }

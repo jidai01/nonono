@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '../src/stores/authStore';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { Colors } from '../src/types/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -31,7 +31,10 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar 
+        style="dark" 
+        backgroundColor={Colors.background}
+      />
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="auth" options={{ headerShown: false, animation: 'fade' }} />
