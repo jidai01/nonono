@@ -267,7 +267,7 @@ export default function EditScheduleScreen() {
           >
             <Ionicons name="time" size={18} color={Colors.primary} style={styles.inputIcon} />
             <Text style={styles.inputText}>{formatTimeDisplay(time)}</Text>
-            <Ionicons name="chevron-forward" size={18} color={Colors.textTertiary} />
+            <Ionicons name="chevron-down" size={18} color={Colors.textTertiary} />
           </TouchableOpacity>
         </View>
 

@@ -238,7 +238,7 @@ export default function NewScheduleScreen() {
           >
             <Ionicons name="time" size={18} color={Colors.primary} />
             <Text style={styles.timeText}>{formatTimeDisplay(time)}</Text>
-            <Ionicons name="chevron-forward" size={18} color={Colors.textTertiary} />
+            <Ionicons name="chevron-down" size={18} color={Colors.textTertiary} />
           </TouchableOpacity>
         </View>
       </ScrollView>
