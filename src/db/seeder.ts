@@ -9,13 +9,15 @@ export async function seedTestData(database: SQLite.SQLiteDatabase) {
     console.log(`[seeder] Existing entries: ${existing?.count || 0}`);
 
     if (existing && existing.count > 0) {
-      console.log('[seeder] Data already exists, skipping seed');
-      return;
+      console.log('[seeder] Clearing existing data...');
+      await database.execAsync('DELETE FROM journal_entries');
+      await database.execAsync('DELETE FROM activities');
+      await database.execAsync('DELETE FROM schedules');
+      await database.execAsync('DELETE FROM addictions');
     }
 
     console.log('[seeder] Starting seed for Aug 1 - Sep 12, 2026...');
 
-    // Create default addictions
     const addictions = [
       "('addiction_gaming', 'Gaming', '🎮', '#6B5CE7')",
       "('addiction_smoking', 'Smoking', '🚬', '#8B8B8B')",
@@ -26,7 +28,6 @@ export async function seedTestData(database: SQLite.SQLiteDatabase) {
       VALUES ${addictions.join(',\n')};
     `);
 
-    // Seed data for Gaming addiction
     await seedAddictionData(database, 'addiction_gaming', {
       relapseDates: ['2026-08-07', '2026-08-19', '2026-08-31', '2026-09-08'],
       activities: [
@@ -43,7 +44,6 @@ export async function seedTestData(database: SQLite.SQLiteDatabase) {
       ],
     });
 
-    // Seed data for Smoking addiction
     await seedAddictionData(database, 'addiction_smoking', {
       relapseDates: ['2026-08-12', '2026-08-28', '2026-09-05'],
       activities: [
