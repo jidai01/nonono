@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/stores/authStore';
 import * as FileSystem from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
-import * as MediaLibrary from 'expo-media-library';
 import { ExportData } from '../../src/types';
 import { encryptData, decryptData } from '../../src/utils/crypto';
 import { getAllEntries, getAllActivities, getAllSchedules } from '../../src/db/queries';
@@ -217,6 +216,7 @@ export default function SettingsScreen() {
 
           if (Platform.OS !== 'web') {
             try {
+              const MediaLibrary = await import('expo-media-library');
               const asset = await MediaLibrary.createAssetAsync(fileUri);
               const album = await MediaLibrary.getAlbumAsync('nonono');
               if (album) {
@@ -224,7 +224,9 @@ export default function SettingsScreen() {
               } else {
                 await MediaLibrary.createAlbumAsync('nonono', asset, false);
               }
-            } catch {}
+            } catch (e) {
+              console.log('MediaLibrary not available, file saved to app directory');
+            }
           }
 
           Alert.alert(
