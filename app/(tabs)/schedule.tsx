@@ -80,12 +80,12 @@ export default function ScheduleScreen() {
   };
 
   const renderSchedule = ({ item }: { item: Schedule }) => (
-    <TouchableOpacity
-      style={[styles.scheduleCard, !item.is_active && styles.scheduleCardInactive]}
-      onPress={() => router.push(`/schedule/edit?id=${item.id}`)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.scheduleHeader}>
+    <View style={[styles.scheduleCard, !item.is_active && styles.scheduleCardInactive]}>
+      <TouchableOpacity
+        style={styles.scheduleContent}
+        onPress={() => router.push(`/schedule/edit?id=${item.id}`)}
+        activeOpacity={0.7}
+      >
         <View style={[styles.scheduleIconContainer, !item.is_active && styles.scheduleIconInactive]}>
           <Ionicons name="time" size={20} color={item.is_active ? Colors.primary : Colors.textTertiary} />
         </View>
@@ -93,32 +93,34 @@ export default function ScheduleScreen() {
           <Text style={[styles.scheduleTitle, !item.is_active && styles.scheduleTitleInactive]}>{item.title}</Text>
           <Text style={[styles.scheduleTime, !item.is_active && styles.scheduleTimeInactive]}>{item.time}</Text>
         </View>
-        <View style={styles.switchContainer}>
-          <Switch
-            value={item.is_active}
-            onValueChange={(value) => handleToggle(item.id, value)}
-            trackColor={{ false: Colors.border, true: Colors.primary + '50' }}
-            thumbColor={item.is_active ? Colors.primary : Colors.textTertiary}
-          />
+      </TouchableOpacity>
+      <View style={styles.scheduleActions}>
+        {item.description ? (
+          <Text style={[styles.scheduleDescription, !item.is_active && styles.scheduleDescriptionInactive]} numberOfLines={2}>{item.description}</Text>
+        ) : null}
+        <View style={styles.scheduleFooter}>
+          <View style={[styles.statusBadge, item.is_active ? styles.statusBadgeActive : styles.statusBadgeInactive]}>
+            <Text style={[styles.statusText, item.is_active ? styles.statusTextActive : styles.statusTextInactive]}>
+              {item.is_active ? 'Active' : 'Paused'}
+            </Text>
+          </View>
+          <View style={styles.footerRight}>
+            <Switch
+              value={item.is_active}
+              onValueChange={(value) => handleToggle(item.id, value)}
+              trackColor={{ false: Colors.border, true: Colors.primary + '50' }}
+              thumbColor={item.is_active ? Colors.primary : Colors.textTertiary}
+            />
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => handleDeleteSchedule(item.id)}
+            >
+              <Ionicons name="trash-outline" size={18} color={Colors.error} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-      {item.description ? (
-        <Text style={[styles.scheduleDescription, !item.is_active && styles.scheduleDescriptionInactive]} numberOfLines={2}>{item.description}</Text>
-      ) : null}
-      <View style={styles.scheduleFooter}>
-        <View style={[styles.statusBadge, item.is_active ? styles.statusBadgeActive : styles.statusBadgeInactive]}>
-          <Text style={[styles.statusText, item.is_active ? styles.statusTextActive : styles.statusTextInactive]}>
-            {item.is_active ? 'Active' : 'Paused'}
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteSchedule(item.id)}
-        >
-          <Ionicons name="trash-outline" size={16} color={Colors.error} />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -251,10 +253,10 @@ const styles = StyleSheet.create({
   scheduleCard: {
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
     marginBottom: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.primary + '30',
+    overflow: 'hidden',
     ...Shadows.small,
   },
   scheduleCardInactive: {
@@ -262,9 +264,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     opacity: 0.8,
   },
-  scheduleHeader: {
+  scheduleContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: Spacing.lg,
+  },
+  scheduleActions: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
   },
   scheduleIconContainer: {
     width: 48,
@@ -298,16 +305,13 @@ const styles = StyleSheet.create({
   scheduleTimeInactive: {
     color: Colors.textTertiary,
   },
-  switchContainer: {
-    marginLeft: Spacing.sm,
-  },
   scheduleDescription: {
     fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
-    marginTop: Spacing.md,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
+    marginBottom: Spacing.md,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
   },
   scheduleDescriptionInactive: {
     color: Colors.textTertiary,
@@ -316,10 +320,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: Spacing.md,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
   },
   statusBadge: {
     paddingHorizontal: Spacing.md,
@@ -341,6 +341,11 @@ const styles = StyleSheet.create({
   },
   statusTextInactive: {
     color: Colors.textTertiary,
+  },
+  footerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
   },
   deleteButton: {
     padding: Spacing.sm,
