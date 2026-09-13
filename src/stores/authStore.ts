@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { Settings } from '../types';
 import { getSettings, saveSettings } from '../db/queries';
 import * as AuthUtils from '../utils/auth';
-import * as LocalAuth from 'expo-local-authentication';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -83,19 +82,24 @@ export const useAuthStore = create<AuthState>((set) => ({
     const settings = await getSettings();
     if (!settings?.biometric_enabled) return false;
 
-    const hasHardware = await LocalAuth.hasHardwareAsync();
-    const isEnrolled = await LocalAuth.isEnrolledAsync();
+    try {
+      const LocalAuth = require('expo-local-authentication');
+      const hasHardware = await LocalAuth.hasHardwareAsync();
+      const isEnrolled = await LocalAuth.isEnrolledAsync();
 
-    if (!hasHardware || !isEnrolled) return false;
+      if (!hasHardware || !isEnrolled) return false;
 
-    const result = await LocalAuth.authenticateAsync({
-      promptMessage: 'Authenticate to login',
-      cancelLabel: 'Cancel',
-    });
+      const result = await LocalAuth.authenticateAsync({
+        promptMessage: 'Authenticate to login',
+        cancelLabel: 'Cancel',
+      });
 
-    if (result.success) {
-      set({ isAuthenticated: true });
-      return true;
+      if (result.success) {
+        set({ isAuthenticated: true });
+        return true;
+      }
+    } catch (e) {
+      console.warn('Biometric not available on this platform');
     }
     return false;
   },

@@ -1,24 +1,54 @@
+import { Platform } from 'react-native';
 import { getDatabase } from './schema';
 import { Settings, JournalEntry, Activity, Schedule } from '../types';
-import * as SecureStore from 'expo-secure-store';
 
 const SETTINGS_KEY = 'nonono_settings';
+
+function getWebStorage() {
+  if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+    return {
+      getItem: (key: string) => localStorage.getItem(key),
+      setItem: (key: string, value: string) => localStorage.setItem(key, value),
+      removeItem: (key: string) => localStorage.removeItem(key),
+    };
+  }
+  return null;
+}
 
 // Settings
 export async function getSettings(): Promise<Settings | null> {
   try {
-    const data = await SecureStore.getItemAsync(SETTINGS_KEY);
-    if (data) return JSON.parse(data);
+    const webStorage = getWebStorage();
+    if (webStorage) {
+      const data = webStorage.getItem(SETTINGS_KEY);
+      if (data) return JSON.parse(data);
+    } else {
+      const SecureStore = require('expo-secure-store');
+      const data = await SecureStore.getItemAsync(SETTINGS_KEY);
+      if (data) return JSON.parse(data);
+    }
   } catch {}
   return null;
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {
-  await SecureStore.setItemAsync(SETTINGS_KEY, JSON.stringify(settings));
+  const webStorage = getWebStorage();
+  if (webStorage) {
+    webStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } else {
+    const SecureStore = require('expo-secure-store');
+    await SecureStore.setItemAsync(SETTINGS_KEY, JSON.stringify(settings));
+  }
 }
 
 export async function deleteSettings(): Promise<void> {
-  await SecureStore.deleteItemAsync(SETTINGS_KEY);
+  const webStorage = getWebStorage();
+  if (webStorage) {
+    webStorage.removeItem(SETTINGS_KEY);
+  } else {
+    const SecureStore = require('expo-secure-store');
+    await SecureStore.deleteItemAsync(SETTINGS_KEY);
+  }
 }
 
 export async function hasSettings(): Promise<boolean> {

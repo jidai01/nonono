@@ -2,18 +2,32 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
+import { useAuthStore } from '../src/stores/authStore';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Colors } from '../src/types/theme';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const { init, loading } = useAuthStore();
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      SplashScreen.hideAsync();
-    }, 500);
-    return () => clearTimeout(timer);
+    init();
   }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      SplashScreen.hideAsync();
+    }
+  }, [loading]);
+
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <>

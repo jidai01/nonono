@@ -33,6 +33,12 @@ export default function SettingsScreen() {
   const [showRecoveryCode, setShowRecoveryCode] = useState(false);
   const [generatedRecoveryCode, setGeneratedRecoveryCode] = useState('');
 
+  // Password visibility toggles
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+
   useEffect(() => {
     checkBiometric();
   }, []);
@@ -397,22 +403,39 @@ export default function SettingsScreen() {
           <Text style={styles.modalDescription}>
             Create a password to protect your journal entries and data.
           </Text>
-          <TextInput
-            style={styles.modalInput}
-            placeholder="Enter password"
-            placeholderTextColor={Colors.textTertiary}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TextInput
-            style={styles.modalInput}
-            placeholder="Confirm password"
-            placeholderTextColor={Colors.textTertiary}
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
+          <View style={styles.infoBox}>
+            <Ionicons name="information-circle" size={18} color={Colors.primary} />
+            <Text style={styles.infoText}>
+              After setting your password, you will receive a <Text style={styles.bold}>Recovery Code</Text>. 
+              Save it somewhere safe — it's the only way to reset your password if you forget it.
+            </Text>
+          </View>
+          <View style={styles.modalInputContainer}>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Enter password"
+              placeholderTextColor={Colors.textTertiary}
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity style={styles.eyeButton} onPress={() => setShowPassword(!showPassword)}>
+              <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={20} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.modalInputContainer}>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Confirm password"
+              placeholderTextColor={Colors.textTertiary}
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+            <TouchableOpacity style={styles.eyeButton} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+              <Ionicons name={showConfirmPassword ? 'eye' : 'eye-off'} size={20} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity style={styles.modalButton} onPress={handleSetupPassword}>
             <Text style={styles.modalButtonText}>Set Password</Text>
           </TouchableOpacity>
@@ -422,30 +445,45 @@ export default function SettingsScreen() {
       {/* Change Password Modal */}
       {renderPasswordModal(showChangeModal, () => setShowChangeModal(false), 'Change Password',
         <View>
-          <TextInput
-            style={styles.modalInput}
-            placeholder="Current password"
-            placeholderTextColor={Colors.textTertiary}
-            secureTextEntry
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-          />
-          <TextInput
-            style={styles.modalInput}
-            placeholder="New password"
-            placeholderTextColor={Colors.textTertiary}
-            secureTextEntry
-            value={newPassword}
-            onChangeText={setNewPassword}
-          />
-          <TextInput
-            style={styles.modalInput}
-            placeholder="Confirm new password"
-            placeholderTextColor={Colors.textTertiary}
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
+          <View style={styles.modalInputContainer}>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Current password"
+              placeholderTextColor={Colors.textTertiary}
+              secureTextEntry={!showCurrentPassword}
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+            />
+            <TouchableOpacity style={styles.eyeButton} onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
+              <Ionicons name={showCurrentPassword ? 'eye' : 'eye-off'} size={20} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.modalInputContainer}>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="New password"
+              placeholderTextColor={Colors.textTertiary}
+              secureTextEntry={!showNewPassword}
+              value={newPassword}
+              onChangeText={setNewPassword}
+            />
+            <TouchableOpacity style={styles.eyeButton} onPress={() => setShowNewPassword(!showNewPassword)}>
+              <Ionicons name={showNewPassword ? 'eye' : 'eye-off'} size={20} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.modalInputContainer}>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Confirm new password"
+              placeholderTextColor={Colors.textTertiary}
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+            <TouchableOpacity style={styles.eyeButton} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+              <Ionicons name={showConfirmPassword ? 'eye' : 'eye-off'} size={20} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity style={styles.modalButton} onPress={handleChangePassword}>
             <Text style={styles.modalButtonText}>Change Password</Text>
           </TouchableOpacity>
@@ -458,14 +496,19 @@ export default function SettingsScreen() {
           <Text style={styles.modalDescription}>
             Enter your password to remove password protection.
           </Text>
-          <TextInput
-            style={styles.modalInput}
-            placeholder="Enter password"
-            placeholderTextColor={Colors.textTertiary}
-            secureTextEntry
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-          />
+          <View style={styles.modalInputContainer}>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Enter password"
+              placeholderTextColor={Colors.textTertiary}
+              secureTextEntry={!showCurrentPassword}
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+            />
+            <TouchableOpacity style={styles.eyeButton} onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
+              <Ionicons name={showCurrentPassword ? 'eye' : 'eye-off'} size={20} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity style={[styles.modalButton, { backgroundColor: Colors.error }]} onPress={handleRemovePassword}>
             <Text style={styles.modalButtonText}>Remove Password</Text>
           </TouchableOpacity>
@@ -478,30 +521,46 @@ export default function SettingsScreen() {
           <Text style={styles.modalDescription}>
             Enter your recovery code and set a new password.
           </Text>
+          <View style={styles.infoBox}>
+            <Ionicons name="information-circle" size={18} color={Colors.primary} />
+            <Text style={styles.infoText}>
+              Your recovery code was shown when you first set your password (e.g., <Text style={styles.bold}>ABCD-1234-EFGH-5678</Text>).
+            </Text>
+          </View>
           <TextInput
             style={styles.modalInput}
-            placeholder="Recovery code (e.g., ABCD-1234-EFGH-5678)"
+            placeholder="Recovery code"
             placeholderTextColor={Colors.textTertiary}
             value={recoveryCode}
             onChangeText={setRecoveryCode}
             autoCapitalize="characters"
           />
-          <TextInput
-            style={styles.modalInput}
-            placeholder="New password"
-            placeholderTextColor={Colors.textTertiary}
-            secureTextEntry
-            value={newPassword}
-            onChangeText={setNewPassword}
-          />
-          <TextInput
-            style={styles.modalInput}
-            placeholder="Confirm new password"
-            placeholderTextColor={Colors.textTertiary}
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
+          <View style={styles.modalInputContainer}>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="New password"
+              placeholderTextColor={Colors.textTertiary}
+              secureTextEntry={!showNewPassword}
+              value={newPassword}
+              onChangeText={setNewPassword}
+            />
+            <TouchableOpacity style={styles.eyeButton} onPress={() => setShowNewPassword(!showNewPassword)}>
+              <Ionicons name={showNewPassword ? 'eye' : 'eye-off'} size={20} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.modalInputContainer}>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Confirm new password"
+              placeholderTextColor={Colors.textTertiary}
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+            <TouchableOpacity style={styles.eyeButton} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+              <Ionicons name={showConfirmPassword ? 'eye' : 'eye-off'} size={20} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity style={styles.modalButton} onPress={handleResetPassword}>
             <Text style={styles.modalButtonText}>Reset Password</Text>
           </TouchableOpacity>
@@ -635,14 +694,44 @@ const styles = StyleSheet.create({
     lineHeight: Typography.sizes.md * 1.5,
   },
   modalInput: {
+    flex: 1,
     backgroundColor: Colors.background,
     borderRadius: BorderRadius.md,
     padding: Spacing.lg,
     fontSize: Typography.sizes.md,
     color: Colors.textPrimary,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  modalInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
     marginBottom: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
+  },
+  eyeButton: {
+    padding: Spacing.md,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    backgroundColor: Colors.primary + '10',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.xl,
+    gap: Spacing.sm,
+    alignItems: 'flex-start',
+  },
+  infoText: {
+    flex: 1,
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.5,
+  },
+  bold: {
+    fontWeight: Typography.weights.semibold,
   },
   modalButton: {
     backgroundColor: Colors.primary,

@@ -13,7 +13,6 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../src/stores/authStore';
-import * as LocalAuth from 'expo-local-authentication';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../src/types/theme';
 
 export default function AuthScreen() {
