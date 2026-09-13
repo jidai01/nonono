@@ -8,7 +8,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { ExportData } from '../../src/types';
 import { encryptData, decryptData } from '../../src/utils/crypto';
-import { getAllSchedules } from '../../src/db/queries';
+import { getAllEntries, getAllActivities, getAllSchedules } from '../../src/db/queries';
 import { updateBiometricSetting, updateDeviceLockSetting } from '../../src/utils/auth';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
@@ -191,6 +191,8 @@ export default function SettingsScreen() {
         if (!passphrase) return;
 
         try {
+          const entries = await getAllEntries();
+          const activities = await getAllActivities();
           const schedules = await getAllSchedules();
 
           const exportData: ExportData = {
@@ -203,7 +205,8 @@ export default function SettingsScreen() {
               biometric_enabled: settings?.biometric_enabled || false,
               created_at: settings?.created_at || '',
             },
-            activities: [],
+            journal_entries: entries,
+            activities: activities,
             schedules: schedules,
           };
 

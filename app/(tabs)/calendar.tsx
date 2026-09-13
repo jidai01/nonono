@@ -1,67 +1,109 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useJournalStore } from '../../src/stores/journalStore';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
-import { useScheduleStore } from '../../src/stores/scheduleStore';
 
 export default function CalendarScreen() {
   const router = useRouter();
-  const { schedules, loadSchedules } = useScheduleStore();
+  const { entries, loadEntriesByMonth, loadEntryByDate, getSoberDays, getRelapseDays, getTotalEntries, getCurrentStreak, getLongestStreak } = useJournalStore();
   const [selectedDate, setSelectedDate] = useState('');
+  const [stats, setStats] = useState({
+    soberDays: 0,
+    relapseDays: 0,
+    totalEntries: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+  });
+  const [selectedEntry, setSelectedEntry] = useState<any>(null);
 
   useEffect(() => {
-    loadSchedules();
+    loadStats();
+    const now = new Date();
+    loadEntriesByMonth(now.getFullYear(), now.getMonth() + 1);
   }, []);
 
-  const markedDates = schedules.reduce((acc, schedule) => {
-    if (!acc[schedule.date]) {
-      acc[schedule.date] = {
-        marked: true,
-        dotColor: Colors.primary,
-        selected: schedule.date === selectedDate,
-        selectedColor: Colors.primary,
-      };
-    }
+  const loadStats = async () => {
+    const [soberDays, relapseDays, totalEntries, currentStreak, longestStreak] = await Promise.all([
+      getSoberDays(),
+      getRelapseDays(),
+      getTotalEntries(),
+      getCurrentStreak(),
+      getLongestStreak(),
+    ]);
+    setStats({ soberDays, relapseDays, totalEntries, currentStreak, longestStreak });
+  };
+
+  const markedDates = entries.reduce((acc, entry) => {
+    acc[entry.date] = {
+      marked: true,
+      dotColor: entry.is_relapse ? Colors.calendarRelapse : Colors.calendarSober,
+      selected: entry.date === selectedDate,
+      selectedColor: entry.is_relapse ? Colors.calendarRelapse : Colors.primary,
+    };
     return acc;
   }, {} as Record<string, any>);
 
-  const handleDayPress = useCallback((day: DateData) => {
+  const handleDayPress = useCallback(async (day: DateData) => {
     setSelectedDate(day.dateString);
+    const entry = await loadEntryByDate(day.dateString);
+    setSelectedEntry(entry);
   }, []);
 
   const handleMonthChange = useCallback((month: DateData) => {
+    loadEntriesByMonth(month.year, month.month);
   }, []);
 
-  const activeSchedules = schedules.filter(s => s.date === selectedDate);
+  const handleAddEntry = () => {
+    router.push(`/entry/new?date=${selectedDate || new Date().toISOString().split('T')[0]}`);
+  };
+
+  const handleViewEntry = () => {
+    if (selectedEntry) {
+      router.push(`/entry/${selectedEntry.id}`);
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      {/* Stats Header */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, { backgroundColor: Colors.primary + '20' }]}>
-            <Ionicons name="calendar" size={20} color={Colors.primary} />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* Hero Stats */}
+      <View style={styles.heroStats}>
+        <View style={styles.heroStatMain}>
+          <View style={styles.heroStatIconContainer}>
+            <Ionicons name="flame" size={32} color={Colors.success} />
           </View>
-          <Text style={styles.statValue}>{schedules.length}</Text>
-          <Text style={styles.statLabel}>Total Schedules</Text>
+          <Text style={styles.heroStatValue}>{stats.currentStreak}</Text>
+          <Text style={styles.heroStatLabel}>Day Streak</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, { backgroundColor: Colors.success + '20' }]}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
+        <View style={styles.heroStatSecondary}>
+          <View style={styles.heroStatRow}>
+            <View style={styles.heroStatItem}>
+              <Ionicons name="checkmark-circle" size={20} color={Colors.calendarSober} />
+              <Text style={styles.heroStatItemValue}>{stats.soberDays}</Text>
+              <Text style={styles.heroStatItemLabel}>Sober</Text>
+            </View>
+            <View style={styles.heroStatDivider} />
+            <View style={styles.heroStatItem}>
+              <Ionicons name="alert-circle" size={20} color={Colors.calendarRelapse} />
+              <Text style={styles.heroStatItemValue}>{stats.relapseDays}</Text>
+              <Text style={styles.heroStatItemLabel}>Relapsed</Text>
+            </View>
           </View>
-          <Text style={styles.statValue}>{schedules.filter(s => s.is_active).length}</Text>
-          <Text style={styles.statLabel}>Active</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, { backgroundColor: Colors.warning + '20' }]}>
-            <Ionicons name="alert-circle" size={20} color={Colors.warning} />
+          <View style={styles.heroStatRow}>
+            <View style={styles.heroStatItem}>
+              <Ionicons name="book" size={20} color={Colors.info} />
+              <Text style={styles.heroStatItemValue}>{stats.totalEntries}</Text>
+              <Text style={styles.heroStatItemLabel}>Entries</Text>
+            </View>
+            <View style={styles.heroStatDivider} />
+            <View style={styles.heroStatItem}>
+              <Ionicons name="trophy" size={20} color={Colors.warning} />
+              <Text style={styles.heroStatItemValue}>{stats.longestStreak}</Text>
+              <Text style={styles.heroStatItemLabel}>Best</Text>
+            </View>
           </View>
-          <Text style={styles.statValue}>{schedules.filter(s => !s.is_active).length}</Text>
-          <Text style={styles.statLabel}>Paused</Text>
         </View>
       </View>
 
@@ -90,36 +132,67 @@ export default function CalendarScreen() {
         />
       </View>
 
-      {/* Selected Date Schedules */}
-      {selectedDate ? (
-        <View style={styles.schedulesContainer}>
-          <Text style={styles.schedulesTitle}>
-            Schedules for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-          </Text>
-          {activeSchedules.length === 0 ? (
-            <View style={styles.emptySchedules}>
-              <Ionicons name="calendar-outline" size={32} color={Colors.textTertiary} />
-              <Text style={styles.emptySchedulesText}>No schedules for this date</Text>
+      {/* Selected Date Section */}
+      <View style={styles.selectedSection}>
+        {selectedDate ? (
+          <>
+            <View style={styles.selectedHeader}>
+              <Text style={styles.selectedDate}>
+                {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </Text>
+              {selectedEntry && (
+                <View style={[
+                  styles.entryBadge,
+                  selectedEntry.is_relapse ? styles.entryBadgeRelapse : styles.entryBadgeSober,
+                ]}>
+                  <Text style={styles.entryBadgeText}>
+                    {selectedEntry.is_relapse ? 'Relapse' : 'Sober'}
+                  </Text>
+                </View>
+              )}
             </View>
-          ) : (
-            activeSchedules.map(schedule => (
-              <View key={schedule.id} style={styles.scheduleCard}>
-                <View style={styles.scheduleTime}>
-                  <Ionicons name="time" size={16} color={Colors.primary} />
-                  <Text style={styles.scheduleTimeText}>{schedule.time}</Text>
+
+            {selectedEntry ? (
+              <TouchableOpacity style={styles.entryPreview} onPress={handleViewEntry}>
+                <View style={styles.entryPreviewHeader}>
+                  <Text style={styles.entryMood}>
+                    {selectedEntry.mood === 1 ? '😞' : selectedEntry.mood === 2 ? '😔' : selectedEntry.mood === 3 ? '😐' : selectedEntry.mood === 4 ? '🙂' : '😊'}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
                 </View>
-                <View style={styles.scheduleInfo}>
-                  <Text style={styles.scheduleTitle}>{schedule.title}</Text>
-                  {schedule.description ? (
-                    <Text style={styles.scheduleDescription} numberOfLines={1}>{schedule.description}</Text>
-                  ) : null}
-                </View>
-              </View>
-            ))
-          )}
-        </View>
-      ) : null}
-    </View>
+                {selectedEntry.feelings ? (
+                  <Text style={styles.entryFeelings} numberOfLines={2}>
+                    {selectedEntry.feelings}
+                  </Text>
+                ) : null}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.addEntryButton} onPress={handleAddEntry}>
+                <Ionicons name="add-circle-outline" size={24} color={Colors.primary} />
+                <Text style={styles.addEntryText}>Add Journal Entry</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        ) : (
+          <View style={styles.noDateSelected}>
+            <Ionicons name="calendar-outline" size={32} color={Colors.textTertiary} />
+            <Text style={styles.noDateText}>Select a date to view or add entry</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Quick Add Button */}
+      {!selectedEntry && selectedDate && (
+        <TouchableOpacity style={styles.quickAddButton} onPress={handleAddEntry}>
+          <Ionicons name="pencil" size={20} color={Colors.textInverse} />
+          <Text style={styles.quickAddText}>Write Today's Entry</Text>
+        </TouchableOpacity>
+      )}
+    </ScrollView>
   );
 }
 
@@ -128,109 +201,174 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  statsContainer: {
+  content: {
+    padding: Spacing.lg,
+  },
+  heroStats: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingVertical: Spacing.xl,
-    paddingHorizontal: Spacing.lg,
     backgroundColor: Colors.surface,
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    ...Shadows.small,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.xl,
+    marginBottom: Spacing.lg,
+    ...Shadows.medium,
   },
-  statCard: {
-    alignItems: 'center',
+  heroStatMain: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRightWidth: 1,
+    borderRightColor: Colors.borderLight,
+    paddingRight: Spacing.lg,
   },
-  statIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  heroStatIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.success + '15',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  statValue: {
-    fontSize: Typography.sizes.xxl,
+  heroStatValue: {
+    fontSize: 40,
+    fontWeight: Typography.weights.bold,
+    color: Colors.success,
+    lineHeight: 44,
+  },
+  heroStatLabel: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textTertiary,
+    marginTop: 2,
+  },
+  heroStatSecondary: {
+    flex: 1.5,
+    paddingLeft: Spacing.lg,
+    justifyContent: 'center',
+  },
+  heroStatRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: Spacing.md,
+  },
+  heroStatItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  heroStatItemValue: {
+    fontSize: Typography.sizes.xl,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
+    marginTop: 4,
   },
-  statLabel: {
+  heroStatItemLabel: {
     fontSize: Typography.sizes.xs,
     color: Colors.textTertiary,
     marginTop: 2,
   },
-  statDivider: {
+  heroStatDivider: {
     width: 1,
-    height: 40,
-    backgroundColor: Colors.border,
+    height: '100%',
+    backgroundColor: Colors.borderLight,
   },
   calendarContainer: {
     backgroundColor: Colors.surface,
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.lg,
     borderRadius: BorderRadius.lg,
     overflow: 'hidden',
+    marginBottom: Spacing.lg,
     ...Shadows.small,
   },
   calendar: {
     borderRadius: BorderRadius.lg,
   },
-  schedulesContainer: {
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.lg,
-  },
-  schedulesTitle: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.md,
-  },
-  emptySchedules: {
-    alignItems: 'center',
-    paddingVertical: Spacing.xxl,
+  selectedSection: {
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    ...Shadows.small,
   },
-  emptySchedulesText: {
+  selectedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  selectedDate: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+  },
+  entryBadge: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+  },
+  entryBadgeSober: {
+    backgroundColor: Colors.calendarSober + '20',
+  },
+  entryBadgeRelapse: {
+    backgroundColor: Colors.calendarRelapse + '20',
+  },
+  entryBadgeText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+  },
+  entryPreview: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+  },
+  entryPreviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  entryMood: {
+    fontSize: 32,
+  },
+  entryFeelings: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginTop: Spacing.sm,
+    lineHeight: Typography.sizes.sm * Typography.lineHeights.relaxed,
+  },
+  addEntryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  addEntryText: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.medium,
+    color: Colors.primary,
+  },
+  noDateSelected: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xxl,
+  },
+  noDateText: {
     fontSize: Typography.sizes.sm,
     color: Colors.textTertiary,
     marginTop: Spacing.sm,
   },
-  scheduleCard: {
+  quickAddButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
     borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
-    ...Shadows.small,
+    padding: Spacing.lg,
+    gap: Spacing.sm,
+    ...Shadows.medium,
   },
-  scheduleTime: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginRight: Spacing.md,
-    minWidth: 70,
-  },
-  scheduleTimeText: {
-    fontSize: Typography.sizes.sm,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.primary,
-  },
-  scheduleInfo: {
-    flex: 1,
-  },
-  scheduleTitle: {
+  quickAddText: {
     fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.medium,
-    color: Colors.textPrimary,
-  },
-  scheduleDescription: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textTertiary,
-    marginTop: 2,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textInverse,
   },
 });

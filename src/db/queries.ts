@@ -102,6 +102,38 @@ export async function deleteEntry(id: string): Promise<void> {
   await db.runAsync('DELETE FROM journal_entries WHERE id = ?', [id]);
 }
 
+export async function getEntryById(id: string): Promise<JournalEntry | null> {
+  const db = await getDatabase();
+  return db.getFirstAsync<JournalEntry>(
+    'SELECT * FROM journal_entries WHERE id = ?',
+    [id]
+  );
+}
+
+export async function getSoberDays(): Promise<number> {
+  const db = await getDatabase();
+  const result = await db.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM journal_entries WHERE is_relapse = 0'
+  );
+  return result?.count || 0;
+}
+
+export async function getRelapseDays(): Promise<number> {
+  const db = await getDatabase();
+  const result = await db.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM journal_entries WHERE is_relapse = 1'
+  );
+  return result?.count || 0;
+}
+
+export async function getTotalEntries(): Promise<number> {
+  const db = await getDatabase();
+  const result = await db.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM journal_entries'
+  );
+  return result?.count || 0;
+}
+
 // Activities
 export async function getAllActivities(): Promise<Activity[]> {
   const db = await getDatabase();

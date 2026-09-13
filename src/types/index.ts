@@ -41,6 +41,7 @@ export interface ExportData {
   version: string;
   exported_at: string;
   settings: Omit<Settings, 'id'>;
+  journal_entries: JournalEntry[];
   activities: Activity[];
   schedules: Schedule[];
 }
