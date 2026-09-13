@@ -63,10 +63,21 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
   },
 
   toggleSchedule: async (id, isActive) => {
-    const schedule = (await db.getAllSchedules()).find(s => s.id === id);
+    console.log('[scheduleStore] toggleSchedule called:', id, isActive);
+    
+    const allSchedules = await db.getAllSchedules();
+    console.log('[scheduleStore] All schedules:', allSchedules.length);
+    
+    const schedule = allSchedules.find(s => s.id === id);
+    console.log('[scheduleStore] Found schedule:', schedule ? 'yes' : 'no');
+    
     if (schedule) {
-      await db.upsertSchedule({ ...schedule, is_active: isActive });
-
+      const updatedSchedule = { ...schedule, is_active: isActive };
+      console.log('[scheduleStore] Updating to:', updatedSchedule.is_active);
+      
+      await db.upsertSchedule(updatedSchedule);
+      console.log('[scheduleStore] Updated successfully');
+      
       if (isActive) {
         await scheduleDateNotification(
           schedule.title,

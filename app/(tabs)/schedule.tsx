@@ -54,9 +54,12 @@ export default function ScheduleScreen() {
   };
 
   const handleToggle = async (id: string, value: boolean) => {
+    console.log('[schedule] handleToggle:', id, value);
     await toggleSchedule(id, value);
+    console.log('[schedule] Reloading schedules...');
     if (currentAddictionId) {
       await loadSchedules(currentAddictionId);
+      console.log('[schedule] Schedules reloaded:', schedules.length);
     }
   };
 
