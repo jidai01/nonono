@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Schedule } from '../types';
 import * as db from '../db/queries';
 import * as Crypto from 'expo-crypto';
-import { scheduleDateNotification, cancelNotification } from '../utils/notifications';
+import { scheduleDateNotification, cancelNotification, requestNotificationPermissions } from '../utils/notifications';
 
 interface ScheduleState {
   schedules: Schedule[];
@@ -33,6 +33,11 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
 
   addSchedule: async (schedule) => {
     const id = Crypto.randomUUID();
+    
+    if (schedule.is_active) {
+      await requestNotificationPermissions();
+    }
+    
     await db.upsertSchedule({ ...schedule, id });
 
     if (schedule.is_active) {
@@ -47,6 +52,10 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
   },
 
   updateSchedule: async (schedule) => {
+    if (schedule.is_active) {
+      await requestNotificationPermissions();
+    }
+    
     await db.upsertSchedule(schedule);
 
     if (schedule.is_active) {
@@ -63,21 +72,14 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
   },
 
   toggleSchedule: async (id, isActive) => {
-    console.log('[scheduleStore] toggleSchedule called:', id, isActive);
-    
-    const allSchedules = await db.getAllSchedules();
-    console.log('[scheduleStore] All schedules:', allSchedules.length);
-    
-    const schedule = allSchedules.find(s => s.id === id);
-    console.log('[scheduleStore] Found schedule:', schedule ? 'yes' : 'no');
-    
+    const schedule = (await db.getAllSchedules()).find(s => s.id === id);
     if (schedule) {
-      const updatedSchedule = { ...schedule, is_active: isActive };
-      console.log('[scheduleStore] Updating to:', updatedSchedule.is_active);
+      if (isActive) {
+        await requestNotificationPermissions();
+      }
       
-      await db.upsertSchedule(updatedSchedule);
-      console.log('[scheduleStore] Updated successfully');
-      
+      await db.upsertSchedule({ ...schedule, is_active: isActive });
+
       if (isActive) {
         await scheduleDateNotification(
           schedule.title,
@@ -90,8 +92,6 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
         await cancelNotification(`schedule_${id}`);
       }
     }
-    
-    // Don't reload schedules here - let the component handle UI updates
   },
 
   deleteSchedule: async (id) => {
