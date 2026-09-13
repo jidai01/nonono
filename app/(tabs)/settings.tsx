@@ -697,9 +697,18 @@ export default function SettingsScreen() {
       {/* Setup Pattern Modal */}
       {renderPasswordModal(showPatternModal, () => { setShowPatternModal(false); setPatternStep('draw'); setFirstPattern(''); }, 'Set Pattern Lock',
         <View style={{ alignItems: 'center' }}>
+          <View style={styles.patternStepRow}>
+            <View style={[styles.patternStep, patternStep === 'draw' && styles.patternStepActive]}>
+              <Text style={[styles.patternStepText, patternStep === 'draw' && styles.patternStepTextActive]}>1. Draw</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={16} color={Colors.textTertiary} />
+            <View style={[styles.patternStep, patternStep === 'confirm' && styles.patternStepActive]}>
+              <Text style={[styles.patternStepText, patternStep === 'confirm' && styles.patternStepTextActive]}>2. Confirm</Text>
+            </View>
+          </View>
           <Text style={styles.modalDescription}>
             {patternStep === 'draw'
-              ? 'Draw a pattern connecting at least 4 dots.'
+              ? 'Connect at least 4 dots to create your pattern.'
               : 'Draw the same pattern again to confirm.'}
           </Text>
           <PatternInput onComplete={handleSetupPattern} />
@@ -713,7 +722,7 @@ export default function SettingsScreen() {
       {renderPasswordModal(showRemovePatternModal, () => setShowRemovePatternModal(false), 'Remove Pattern Lock',
         <View style={{ alignItems: 'center' }}>
           <Text style={styles.modalDescription}>
-            Draw your current pattern to remove pattern lock.
+            Draw your current pattern to remove it.
           </Text>
           <PatternInput onComplete={handleRemovePattern} />
           <TouchableOpacity style={[styles.modalButton, { marginTop: Spacing.xl }]} onPress={() => setShowRemovePatternModal(false)}>
@@ -906,5 +915,29 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     textAlign: 'center',
     lineHeight: Typography.sizes.sm * 1.5,
+  },
+  patternStepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xl,
+  },
+  patternStep: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.background,
+  },
+  patternStepActive: {
+    backgroundColor: Colors.primary + '20',
+  },
+  patternStepText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textTertiary,
+    fontWeight: Typography.weights.medium,
+  },
+  patternStepTextActive: {
+    color: Colors.primary,
+    fontWeight: Typography.weights.semibold,
   },
 });
