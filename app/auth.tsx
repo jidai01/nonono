@@ -13,22 +13,17 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../src/stores/authStore';
-import PatternInput from '../src/components/PatternInput';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../src/types/theme';
-
-type LoginMode = 'password' | 'pattern' | 'biometric' | 'deviceLock';
 
 export default function AuthScreen() {
   const router = useRouter();
   const {
     isAuthenticated,
     hasPassword,
-    hasPattern,
     hasDeviceLock,
     setupPassword,
     login,
     loginWithBiometric,
-    loginWithPattern,
     loginWithDeviceLock,
     skipAuth,
   } = useAuthStore();
@@ -40,7 +35,6 @@ export default function AuthScreen() {
   const [recoveryCode, setRecoveryCode] = useState('');
   const [showRecoveryCode, setShowRecoveryCode] = useState(false);
   const [isSetup, setIsSetup] = useState(false);
-  const [loginMode, setLoginMode] = useState<LoginMode | null>(null);
   const [hasBiometric, setHasBiometric] = useState(false);
 
   const passwordsMatch = password.length > 0 && confirmPassword.length > 0 && password === confirmPassword;
@@ -105,15 +99,6 @@ export default function AuthScreen() {
     const success = await loginWithDeviceLock();
     if (success) {
       router.replace('/(tabs)/calendar');
-    }
-  };
-
-  const handlePatternLogin = async (pattern: string) => {
-    const success = await loginWithPattern(pattern);
-    if (success) {
-      router.replace('/(tabs)/calendar');
-    } else {
-      Alert.alert('Error', 'Wrong pattern');
     }
   };
 
@@ -246,15 +231,6 @@ export default function AuthScreen() {
                   <Text style={styles.skipButtonText}>Skip for now</Text>
                 </TouchableOpacity>
               </>
-            ) : loginMode === 'pattern' ? (
-              <>
-                <Text style={styles.formTitle}>Draw Your Pattern</Text>
-                <PatternInput onComplete={handlePatternLogin} />
-                <TouchableOpacity style={styles.backButton} onPress={() => setLoginMode(null)}>
-                  <Ionicons name="arrow-back" size={20} color={Colors.primary} />
-                  <Text style={styles.backButtonText}>Back</Text>
-                </TouchableOpacity>
-              </>
             ) : (
               <>
                 <Text style={styles.formTitle}>Welcome Back</Text>
@@ -299,12 +275,6 @@ export default function AuthScreen() {
                     <TouchableOpacity style={styles.altLoginButton} onPress={handleBiometricLogin}>
                       <Ionicons name="finger-print" size={24} color={Colors.primary} />
                       <Text style={styles.altLoginText}>Biometric</Text>
-                    </TouchableOpacity>
-                  )}
-                  {hasPattern && (
-                    <TouchableOpacity style={styles.altLoginButton} onPress={() => setLoginMode('pattern')}>
-                      <Ionicons name="grid" size={24} color={Colors.primary} />
-                      <Text style={styles.altLoginText}>Pattern</Text>
                     </TouchableOpacity>
                   )}
                   {hasDeviceLock && (
@@ -480,18 +450,6 @@ const styles = StyleSheet.create({
   skipButtonText: {
     fontSize: Typography.sizes.sm,
     color: Colors.textTertiary,
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginTop: Spacing.xl,
-    paddingVertical: Spacing.sm,
-  },
-  backButtonText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.primary,
   },
   recoveryCard: {
     backgroundColor: Colors.surface,

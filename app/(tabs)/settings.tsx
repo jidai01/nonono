@@ -9,12 +9,11 @@ import { ExportData } from '../../src/types';
 import { encryptData, decryptData } from '../../src/utils/crypto';
 import { getAllEntries, getAllSchedules } from '../../src/db/queries';
 import { updateBiometricSetting, updateDeviceLockSetting } from '../../src/utils/auth';
-import PatternInput from '../../src/components/PatternInput';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { settings, hasPassword, hasPattern, hasDeviceLock, setupPassword, changePassword, removePassword, resetPassword, setupPattern, removePattern, logout } = useAuthStore();
+  const { settings, hasPassword, hasDeviceLock, setupPassword, changePassword, removePassword, resetPassword, logout } = useAuthStore();
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [hasBiometric, setHasBiometric] = useState(false);
   const [deviceLockEnabled, setDeviceLockEnabled] = useState(false);
@@ -24,8 +23,6 @@ export default function SettingsScreen() {
   const [showChangeModal, setShowChangeModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
-  const [showPatternModal, setShowPatternModal] = useState(false);
-  const [showRemovePatternModal, setShowRemovePatternModal] = useState(false);
 
   // Form states
   const [password, setPassword] = useState('');
@@ -35,8 +32,6 @@ export default function SettingsScreen() {
   const [recoveryCode, setRecoveryCode] = useState('');
   const [showRecoveryCode, setShowRecoveryCode] = useState(false);
   const [generatedRecoveryCode, setGeneratedRecoveryCode] = useState('');
-  const [patternStep, setPatternStep] = useState<'draw' | 'confirm'>('draw');
-  const [firstPattern, setFirstPattern] = useState('');
 
   // Password visibility toggles
   const [showPassword, setShowPassword] = useState(false);
@@ -109,35 +104,6 @@ export default function SettingsScreen() {
     setShowSetupModal(false);
     setPassword('');
     setConfirmPassword('');
-  };
-
-  const handleSetupPattern = async (pattern: string) => {
-    if (patternStep === 'draw') {
-      setFirstPattern(pattern);
-      setPatternStep('confirm');
-    } else {
-      if (pattern !== firstPattern) {
-        Alert.alert('Error', 'Patterns do not match. Try again.');
-        setPatternStep('draw');
-        setFirstPattern('');
-        return;
-      }
-      await setupPattern(pattern);
-      setShowPatternModal(false);
-      setPatternStep('draw');
-      setFirstPattern('');
-      Alert.alert('Success', 'Pattern lock has been set up.');
-    }
-  };
-
-  const handleRemovePattern = async (pattern: string) => {
-    const success = await removePattern(pattern);
-    if (success) {
-      setShowRemovePatternModal(false);
-      Alert.alert('Success', 'Pattern lock removed.');
-    } else {
-      Alert.alert('Error', 'Incorrect pattern.');
-    }
   };
 
   const handleChangePassword = async () => {
@@ -411,36 +377,6 @@ export default function SettingsScreen() {
             </>
           )}
 
-          {/* Pattern Lock */}
-          <View style={styles.divider} />
-          {hasPattern ? (
-            <TouchableOpacity style={styles.settingRow} onPress={() => setShowRemovePatternModal(true)}>
-              <View style={styles.settingIconContainer}>
-                <Ionicons name="grid" size={20} color={Colors.primary} />
-              </View>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Pattern Lock</Text>
-                <Text style={styles.settingDescription}>
-                  Tap to change or remove pattern
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.settingRow} onPress={() => setShowPatternModal(true)}>
-              <View style={styles.settingIconContainer}>
-                <Ionicons name="grid" size={20} color={Colors.primary} />
-              </View>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Pattern Lock</Text>
-                <Text style={styles.settingDescription}>
-                  Set a pattern as alternative lock
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
-            </TouchableOpacity>
-          )}
-
           {/* Device Lock */}
           {hasDeviceLock && (
             <>
@@ -693,43 +629,6 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
       )}
-
-      {/* Setup Pattern Modal */}
-      {renderPasswordModal(showPatternModal, () => { setShowPatternModal(false); setPatternStep('draw'); setFirstPattern(''); }, 'Set Pattern Lock',
-        <View style={{ alignItems: 'center' }}>
-          <View style={styles.patternStepRow}>
-            <View style={[styles.patternStep, patternStep === 'draw' && styles.patternStepActive]}>
-              <Text style={[styles.patternStepText, patternStep === 'draw' && styles.patternStepTextActive]}>1. Draw</Text>
-            </View>
-            <Ionicons name="arrow-forward" size={16} color={Colors.textTertiary} />
-            <View style={[styles.patternStep, patternStep === 'confirm' && styles.patternStepActive]}>
-              <Text style={[styles.patternStepText, patternStep === 'confirm' && styles.patternStepTextActive]}>2. Confirm</Text>
-            </View>
-          </View>
-          <Text style={styles.modalDescription}>
-            {patternStep === 'draw'
-              ? 'Connect at least 4 dots to create your pattern.'
-              : 'Draw the same pattern again to confirm.'}
-          </Text>
-          <PatternInput onComplete={handleSetupPattern} />
-          <TouchableOpacity style={[styles.modalButton, { marginTop: Spacing.xl }]} onPress={() => { setShowPatternModal(false); setPatternStep('draw'); setFirstPattern(''); }}>
-            <Text style={styles.modalButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Remove Pattern Modal */}
-      {renderPasswordModal(showRemovePatternModal, () => setShowRemovePatternModal(false), 'Remove Pattern Lock',
-        <View style={{ alignItems: 'center' }}>
-          <Text style={styles.modalDescription}>
-            Draw your current pattern to remove it.
-          </Text>
-          <PatternInput onComplete={handleRemovePattern} />
-          <TouchableOpacity style={[styles.modalButton, { marginTop: Spacing.xl }]} onPress={() => setShowRemovePatternModal(false)}>
-            <Text style={styles.modalButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      )}
     </ScrollView>
   );
 }
@@ -915,29 +814,5 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     textAlign: 'center',
     lineHeight: Typography.sizes.sm * 1.5,
-  },
-  patternStepRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xl,
-  },
-  patternStep: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.sm,
-    backgroundColor: Colors.background,
-  },
-  patternStepActive: {
-    backgroundColor: Colors.primary + '20',
-  },
-  patternStepText: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textTertiary,
-    fontWeight: Typography.weights.medium,
-  },
-  patternStepTextActive: {
-    color: Colors.primary,
-    fontWeight: Typography.weights.semibold,
   },
 });

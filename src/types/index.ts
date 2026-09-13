@@ -4,8 +4,6 @@ export interface Settings {
   salt: string;
   recovery_code_hash: string;
   biometric_enabled: boolean;
-  pattern_hash: string;
-  pattern_salt: string;
   device_lock_enabled: boolean;
   created_at: string;
 }
