@@ -3,68 +3,65 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useJournalStore } from '../../src/stores/journalStore';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
+import { useScheduleStore } from '../../src/stores/scheduleStore';
 
 export default function CalendarScreen() {
   const router = useRouter();
-  const { entries, loadEntriesByMonth, loadEntryByDate } = useJournalStore();
+  const { schedules, loadSchedules } = useScheduleStore();
   const [selectedDate, setSelectedDate] = useState('');
 
   useEffect(() => {
-    const now = new Date();
-    loadEntriesByMonth(now.getFullYear(), now.getMonth() + 1);
+    loadSchedules();
   }, []);
 
-  const markedDates = entries.reduce((acc, entry) => {
-    acc[entry.date] = {
-      marked: true,
-      dotColor: entry.is_relapse ? Colors.calendarRelapse : Colors.calendarSober,
-      selected: entry.date === selectedDate,
-      selectedColor: entry.is_relapse ? Colors.calendarRelapse : Colors.primary,
-    };
+  const markedDates = schedules.reduce((acc, schedule) => {
+    if (!acc[schedule.date]) {
+      acc[schedule.date] = {
+        marked: true,
+        dotColor: Colors.primary,
+        selected: schedule.date === selectedDate,
+        selectedColor: Colors.primary,
+      };
+    }
     return acc;
   }, {} as Record<string, any>);
 
   const handleDayPress = useCallback((day: DateData) => {
     setSelectedDate(day.dateString);
-    loadEntryByDate(day.dateString);
-    router.push(`/entry/${day.dateString}`);
   }, []);
 
   const handleMonthChange = useCallback((month: DateData) => {
-    loadEntriesByMonth(month.year, month.month);
   }, []);
 
-  const soberDays = entries.filter(e => !e.is_relapse).length;
-  const relapseDays = entries.filter(e => e.is_relapse).length;
+  const activeSchedules = schedules.filter(s => s.date === selectedDate);
 
   return (
     <View style={styles.container}>
       {/* Stats Header */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, { backgroundColor: Colors.success + '20' }]}>
-            <Ionicons name="flame" size={20} color={Colors.success} />
-          </View>
-          <Text style={styles.statValue}>{soberDays}</Text>
-          <Text style={styles.statLabel}>Sober Days</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statCard}>
           <View style={[styles.statIconContainer, { backgroundColor: Colors.primary + '20' }]}>
             <Ionicons name="calendar" size={20} color={Colors.primary} />
           </View>
-          <Text style={styles.statValue}>{entries.length}</Text>
-          <Text style={styles.statLabel}>Total Entries</Text>
+          <Text style={styles.statValue}>{schedules.length}</Text>
+          <Text style={styles.statLabel}>Total Schedules</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, { backgroundColor: Colors.error + '20' }]}>
-            <Ionicons name="alert-circle" size={20} color={Colors.error} />
+          <View style={[styles.statIconContainer, { backgroundColor: Colors.success + '20' }]}>
+            <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
           </View>
-          <Text style={styles.statValue}>{relapseDays}</Text>
-          <Text style={styles.statLabel}>Relapses</Text>
+          <Text style={styles.statValue}>{schedules.filter(s => s.is_active).length}</Text>
+          <Text style={styles.statLabel}>Active</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statCard}>
+          <View style={[styles.statIconContainer, { backgroundColor: Colors.warning + '20' }]}>
+            <Ionicons name="alert-circle" size={20} color={Colors.warning} />
+          </View>
+          <Text style={styles.statValue}>{schedules.filter(s => !s.is_active).length}</Text>
+          <Text style={styles.statLabel}>Paused</Text>
         </View>
       </View>
 
@@ -93,21 +90,35 @@ export default function CalendarScreen() {
         />
       </View>
 
-      {/* Legend */}
-      <View style={styles.legendContainer}>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: Colors.calendarSober }]} />
-          <Text style={styles.legendText}>Sober Day</Text>
+      {/* Selected Date Schedules */}
+      {selectedDate ? (
+        <View style={styles.schedulesContainer}>
+          <Text style={styles.schedulesTitle}>
+            Schedules for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+          </Text>
+          {activeSchedules.length === 0 ? (
+            <View style={styles.emptySchedules}>
+              <Ionicons name="calendar-outline" size={32} color={Colors.textTertiary} />
+              <Text style={styles.emptySchedulesText}>No schedules for this date</Text>
+            </View>
+          ) : (
+            activeSchedules.map(schedule => (
+              <View key={schedule.id} style={styles.scheduleCard}>
+                <View style={styles.scheduleTime}>
+                  <Ionicons name="time" size={16} color={Colors.primary} />
+                  <Text style={styles.scheduleTimeText}>{schedule.time}</Text>
+                </View>
+                <View style={styles.scheduleInfo}>
+                  <Text style={styles.scheduleTitle}>{schedule.title}</Text>
+                  {schedule.description ? (
+                    <Text style={styles.scheduleDescription} numberOfLines={1}>{schedule.description}</Text>
+                  ) : null}
+                </View>
+              </View>
+            ))
+          )}
         </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: Colors.calendarRelapse }]} />
-          <Text style={styles.legendText}>Relapse</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: Colors.calendarEmpty }]} />
-          <Text style={styles.legendText}>No Entry</Text>
-        </View>
-      </View>
+      ) : null}
     </View>
   );
 }
@@ -167,25 +178,59 @@ const styles = StyleSheet.create({
   calendar: {
     borderRadius: BorderRadius.lg,
   },
-  legendContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: Spacing.xl,
-    paddingVertical: Spacing.xl,
+  schedulesContainer: {
+    marginHorizontal: Spacing.lg,
     marginTop: Spacing.lg,
   },
-  legendItem: {
+  schedulesTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+  },
+  emptySchedules: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xxl,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+  },
+  emptySchedulesText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textTertiary,
+    marginTop: Spacing.sm,
+  },
+  scheduleCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    ...Shadows.small,
   },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  scheduleTime: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginRight: Spacing.md,
+    minWidth: 70,
   },
-  legendText: {
+  scheduleTimeText: {
     fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.primary,
+  },
+  scheduleInfo: {
+    flex: 1,
+  },
+  scheduleTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.medium,
+    color: Colors.textPrimary,
+  },
+  scheduleDescription: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textTertiary,
+    marginTop: 2,
   },
 });

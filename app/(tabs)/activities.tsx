@@ -17,12 +17,6 @@ export default function ActivitiesScreen() {
   useEffect(() => {
     loadActivities();
   }, []);
-  const [showModal, setShowModal] = useState(false);
-  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
-  const [activityName, setActivityName] = useState('');
-  const [duration, setDuration] = useState('');
-  const [notes, setNotes] = useState('');
-  const [selectedPredefined, setSelectedPredefined] = useState<string | null>(null);
 
   const openAddModal = () => {
     setEditingActivity(null);
