@@ -29,19 +29,34 @@ export async function hashPassword(password: string, salt: string): Promise<stri
   );
 }
 
+function getDefaultSettings(): Settings {
+  return {
+    id: 1,
+    password_hash: '',
+    salt: '',
+    recovery_code_hash: '',
+    biometric_enabled: false,
+    pattern_hash: '',
+    pattern_salt: '',
+    device_lock_enabled: false,
+    created_at: new Date().toISOString(),
+  };
+}
+
 export async function createPassword(password: string): Promise<{ settings: Settings; recoveryCode: string }> {
+  const existing = await getSettings();
+  const base = existing || getDefaultSettings();
+
   const salt = generateSalt();
   const passwordHash = await hashPassword(password, salt);
   const recoveryCode = generateRecoveryCode();
   const recoveryCodeHash = await hashPassword(recoveryCode, salt);
 
   const settings: Settings = {
-    id: 1,
+    ...base,
     password_hash: passwordHash,
     salt,
     recovery_code_hash: recoveryCodeHash,
-    biometric_enabled: false,
-    created_at: new Date().toISOString(),
   };
 
   await saveSettings(settings);
@@ -50,7 +65,7 @@ export async function createPassword(password: string): Promise<{ settings: Sett
 
 export async function verifyPassword(password: string): Promise<boolean> {
   const settings = await getSettings();
-  if (!settings) return false;
+  if (!settings || !settings.password_hash) return false;
 
   const hash = await hashPassword(password, settings.salt);
   return hash === settings.password_hash;
@@ -58,7 +73,7 @@ export async function verifyPassword(password: string): Promise<boolean> {
 
 export async function verifyRecoveryCode(code: string): Promise<boolean> {
   const settings = await getSettings();
-  if (!settings) return false;
+  if (!settings || !settings.recovery_code_hash) return false;
 
   const hash = await hashPassword(code, settings.salt);
   return hash === settings.recovery_code_hash;
@@ -69,6 +84,86 @@ export async function updateBiometricSetting(enabled: boolean): Promise<void> {
   if (settings) {
     settings.biometric_enabled = enabled;
     await saveSettings(settings);
+  }
+}
+
+// Pattern Lock
+export async function setupPattern(pattern: string): Promise<void> {
+  const settings = await getSettings();
+  const base = settings || getDefaultSettings();
+
+  const salt = generateSalt();
+  const patternHash = await hashPassword(pattern, salt);
+
+  const updated: Settings = {
+    ...base,
+    pattern_hash: patternHash,
+    pattern_salt: salt,
+  };
+
+  await saveSettings(updated);
+}
+
+export async function verifyPattern(pattern: string): Promise<boolean> {
+  const settings = await getSettings();
+  if (!settings || !settings.pattern_hash) return false;
+
+  const hash = await hashPassword(pattern, settings.pattern_salt);
+  return hash === settings.pattern_hash;
+}
+
+export async function removePattern(): Promise<void> {
+  const settings = await getSettings();
+  if (settings) {
+    settings.pattern_hash = '';
+    settings.pattern_salt = '';
+    await saveSettings(settings);
+  }
+}
+
+export async function hasPattern(): Promise<boolean> {
+  const settings = await getSettings();
+  return !!(settings?.pattern_hash);
+}
+
+// Device Lock (uses device PIN/pattern/fingerprint)
+export async function updateDeviceLockSetting(enabled: boolean): Promise<void> {
+  const settings = await getSettings();
+  if (settings) {
+    settings.device_lock_enabled = enabled;
+    await saveSettings(settings);
+  }
+}
+
+export async function authenticateWithDeviceLock(): Promise<boolean> {
+  try {
+    const LocalAuth = require('expo-local-authentication');
+    const hasHardware = await LocalAuth.hasHardwareAsync();
+    const isEnrolled = await LocalAuth.isEnrolledAsync();
+
+    if (!hasHardware || !isEnrolled) return false;
+
+    const result = await LocalAuth.authenticateAsync({
+      promptMessage: 'Authenticate with device lock',
+      cancelLabel: 'Cancel',
+      disableDeviceFallback: false,
+    });
+
+    return result.success;
+  } catch (e) {
+    console.warn('Device lock not available');
+    return false;
+  }
+}
+
+export async function hasDeviceLockHardware(): Promise<boolean> {
+  try {
+    const LocalAuth = require('expo-local-authentication');
+    const hasHardware = await LocalAuth.hasHardwareAsync();
+    const isEnrolled = await LocalAuth.isEnrolledAsync();
+    return hasHardware && isEnrolled;
+  } catch {
+    return false;
   }
 }
 

@@ -13,11 +13,26 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../src/stores/authStore';
+import PatternInput from '../src/components/PatternInput';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../src/types/theme';
+
+type LoginMode = 'password' | 'pattern' | 'biometric' | 'deviceLock';
 
 export default function AuthScreen() {
   const router = useRouter();
-  const { isSetupComplete, isAuthenticated, setupPassword, login, loginWithBiometric, settings } = useAuthStore();
+  const {
+    isAuthenticated,
+    hasPassword,
+    hasPattern,
+    hasDeviceLock,
+    setupPassword,
+    login,
+    loginWithBiometric,
+    loginWithPattern,
+    loginWithDeviceLock,
+    skipAuth,
+  } = useAuthStore();
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -25,10 +40,10 @@ export default function AuthScreen() {
   const [recoveryCode, setRecoveryCode] = useState('');
   const [showRecoveryCode, setShowRecoveryCode] = useState(false);
   const [isSetup, setIsSetup] = useState(false);
+  const [loginMode, setLoginMode] = useState<LoginMode | null>(null);
   const [hasBiometric, setHasBiometric] = useState(false);
 
   const passwordsMatch = password.length > 0 && confirmPassword.length > 0 && password === confirmPassword;
-  const passwordsMismatch = confirmPassword.length > 0 && password !== confirmPassword;
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -41,9 +56,14 @@ export default function AuthScreen() {
   }, []);
 
   const checkBiometric = async () => {
-    const hasHardware = await LocalAuth.hasHardwareAsync();
-    const isEnrolled = await LocalAuth.isEnrolledAsync();
-    setHasBiometric(hasHardware && isEnrolled);
+    try {
+      const LocalAuth = require('expo-local-authentication');
+      const hasHardware = await LocalAuth.hasHardwareAsync();
+      const isEnrolled = await LocalAuth.isEnrolledAsync();
+      setHasBiometric(hasHardware && isEnrolled);
+    } catch {
+      setHasBiometric(false);
+    }
   };
 
   const handleSetup = async () => {
@@ -79,6 +99,27 @@ export default function AuthScreen() {
     if (success) {
       router.replace('/(tabs)/calendar');
     }
+  };
+
+  const handleDeviceLockLogin = async () => {
+    const success = await loginWithDeviceLock();
+    if (success) {
+      router.replace('/(tabs)/calendar');
+    }
+  };
+
+  const handlePatternLogin = async (pattern: string) => {
+    const success = await loginWithPattern(pattern);
+    if (success) {
+      router.replace('/(tabs)/calendar');
+    } else {
+      Alert.alert('Error', 'Wrong pattern');
+    }
+  };
+
+  const handleSkip = () => {
+    skipAuth();
+    router.replace('/(tabs)/calendar');
   };
 
   const handleRecoveryCodeDone = () => {
@@ -127,7 +168,7 @@ export default function AuthScreen() {
 
           {/* Form Card */}
           <View style={styles.formCard}>
-            {!isSetupComplete ? (
+            {!isSetup ? (
               <>
                 <Text style={styles.formTitle}>Create Your Password</Text>
                 
@@ -199,6 +240,20 @@ export default function AuthScreen() {
                 >
                   <Text style={styles.primaryButtonText}>Create Password</Text>
                 </TouchableOpacity>
+
+                {/* Skip */}
+                <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+                  <Text style={styles.skipButtonText}>Skip for now</Text>
+                </TouchableOpacity>
+              </>
+            ) : loginMode === 'pattern' ? (
+              <>
+                <Text style={styles.formTitle}>Draw Your Pattern</Text>
+                <PatternInput onComplete={handlePatternLogin} />
+                <TouchableOpacity style={styles.backButton} onPress={() => setLoginMode(null)}>
+                  <Ionicons name="arrow-back" size={20} color={Colors.primary} />
+                  <Text style={styles.backButtonText}>Back</Text>
+                </TouchableOpacity>
               </>
             ) : (
               <>
@@ -232,16 +287,38 @@ export default function AuthScreen() {
                   <Text style={styles.primaryButtonText}>Login</Text>
                 </TouchableOpacity>
 
-                {/* Biometric Login */}
-                {hasBiometric && settings?.biometric_enabled && (
-                  <TouchableOpacity
-                    style={styles.secondaryButton}
-                    onPress={handleBiometricLogin}
-                  >
-                    <Ionicons name="finger-print" size={20} color={Colors.primary} />
-                    <Text style={styles.secondaryButtonText}>Use Biometrics</Text>
-                  </TouchableOpacity>
-                )}
+                {/* Alternative Login Methods */}
+                <View style={styles.dividerRow}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>or continue with</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                <View style={styles.altLoginRow}>
+                  {hasBiometric && (
+                    <TouchableOpacity style={styles.altLoginButton} onPress={handleBiometricLogin}>
+                      <Ionicons name="finger-print" size={24} color={Colors.primary} />
+                      <Text style={styles.altLoginText}>Biometric</Text>
+                    </TouchableOpacity>
+                  )}
+                  {hasPattern && (
+                    <TouchableOpacity style={styles.altLoginButton} onPress={() => setLoginMode('pattern')}>
+                      <Ionicons name="grid" size={24} color={Colors.primary} />
+                      <Text style={styles.altLoginText}>Pattern</Text>
+                    </TouchableOpacity>
+                  )}
+                  {hasDeviceLock && (
+                    <TouchableOpacity style={styles.altLoginButton} onPress={handleDeviceLockLogin}>
+                      <Ionicons name="phone-portrait" size={24} color={Colors.primary} />
+                      <Text style={styles.altLoginText}>Device Lock</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Skip */}
+                <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+                  <Text style={styles.skipButtonText}>Skip for now</Text>
+                </TouchableOpacity>
               </>
             )}
           </View>
@@ -361,22 +438,60 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
   },
-  secondaryButton: {
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.xl,
+    gap: Spacing.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.border,
+  },
+  dividerText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textTertiary,
+  },
+  altLoginRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Spacing.lg,
+  },
+  altLoginButton: {
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    minWidth: 80,
+  },
+  altLoginText: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  skipButton: {
+    alignItems: 'center',
+    marginTop: Spacing.xl,
+    paddingVertical: Spacing.sm,
+  },
+  skipButtonText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textTertiary,
+  },
+  backButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.lg,
-    marginTop: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.primary,
+    marginTop: Spacing.xl,
+    paddingVertical: Spacing.sm,
   },
-  secondaryButtonText: {
-    color: Colors.primary,
+  backButtonText: {
     fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
+    color: Colors.primary,
   },
   recoveryCard: {
     backgroundColor: Colors.surface,

@@ -3,26 +3,30 @@ import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert, ScrollView, Te
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/stores/authStore';
-import * as LocalAuth from 'expo-local-authentication';
 import * as FileSystem from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import { ExportData } from '../../src/types';
 import { encryptData, decryptData } from '../../src/utils/crypto';
 import { getAllEntries, getAllSchedules } from '../../src/db/queries';
-import { updateBiometricSetting } from '../../src/utils/auth';
+import { updateBiometricSetting, updateDeviceLockSetting, hasDeviceLockHardware } from '../../src/utils/auth';
+import PatternInput from '../../src/components/PatternInput';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { settings, hasPassword, setupPassword, changePassword, removePassword, resetPassword, logout } = useAuthStore();
+  const { settings, hasPassword, hasPattern, hasDeviceLock, setupPassword, changePassword, removePassword, resetPassword, setupPattern, removePattern, logout } = useAuthStore();
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [hasBiometric, setHasBiometric] = useState(false);
+  const [deviceLockEnabled, setDeviceLockEnabled] = useState(false);
+  const [hasDeviceLock, setHasDeviceLock] = useState(false);
 
   // Modal states
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [showChangeModal, setShowChangeModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showPatternModal, setShowPatternModal] = useState(false);
+  const [showRemovePatternModal, setShowRemovePatternModal] = useState(false);
 
   // Form states
   const [password, setPassword] = useState('');
@@ -32,6 +36,8 @@ export default function SettingsScreen() {
   const [recoveryCode, setRecoveryCode] = useState('');
   const [showRecoveryCode, setShowRecoveryCode] = useState(false);
   const [generatedRecoveryCode, setGeneratedRecoveryCode] = useState('');
+  const [patternStep, setPatternStep] = useState<'draw' | 'confirm'>('draw');
+  const [firstPattern, setFirstPattern] = useState('');
 
   // Password visibility toggles
   const [showPassword, setShowPassword] = useState(false);
@@ -41,28 +47,56 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     checkBiometric();
+    checkDeviceLock();
   }, []);
 
   const checkBiometric = async () => {
-    const hasHardware = await LocalAuth.hasHardwareAsync();
-    const isEnrolled = await LocalAuth.isEnrolledAsync();
-    setHasBiometric(hasHardware && isEnrolled);
-    setBiometricEnabled(settings?.biometric_enabled || false);
+    try {
+      const LocalAuth = require('expo-local-authentication');
+      const hasHardware = await LocalAuth.hasHardwareAsync();
+      const isEnrolled = await LocalAuth.isEnrolledAsync();
+      setHasBiometric(hasHardware && isEnrolled);
+      setBiometricEnabled(settings?.biometric_enabled || false);
+    } catch {
+      setHasBiometric(false);
+    }
+  };
+
+  const checkDeviceLock = async () => {
+    const has = await hasDeviceLockHardware();
+    setHasDeviceLock(has);
+    setDeviceLockEnabled(settings?.device_lock_enabled || false);
   };
 
   const toggleBiometric = async (value: boolean) => {
     if (value) {
-      const result = await LocalAuth.authenticateAsync({
-        promptMessage: 'Verify to enable biometrics',
-        cancelLabel: 'Cancel',
-      });
-      if (result.success) {
-        await updateBiometricSetting(true);
-        setBiometricEnabled(true);
-      }
+      try {
+        const LocalAuth = require('expo-local-authentication');
+        const result = await LocalAuth.authenticateAsync({
+          promptMessage: 'Verify to enable biometrics',
+          cancelLabel: 'Cancel',
+        });
+        if (result.success) {
+          await updateBiometricSetting(true);
+          setBiometricEnabled(true);
+        }
+      } catch {}
     } else {
       await updateBiometricSetting(false);
       setBiometricEnabled(false);
+    }
+  };
+
+  const toggleDeviceLock = async (value: boolean) => {
+    if (value) {
+      const result = await require('../../src/utils/auth').authenticateWithDeviceLock();
+      if (result) {
+        await updateDeviceLockSetting(true);
+        setDeviceLockEnabled(true);
+      }
+    } else {
+      await updateDeviceLockSetting(false);
+      setDeviceLockEnabled(false);
     }
   };
 
@@ -82,6 +116,35 @@ export default function SettingsScreen() {
     setShowSetupModal(false);
     setPassword('');
     setConfirmPassword('');
+  };
+
+  const handleSetupPattern = async (pattern: string) => {
+    if (patternStep === 'draw') {
+      setFirstPattern(pattern);
+      setPatternStep('confirm');
+    } else {
+      if (pattern !== firstPattern) {
+        Alert.alert('Error', 'Patterns do not match. Try again.');
+        setPatternStep('draw');
+        setFirstPattern('');
+        return;
+      }
+      await setupPattern(pattern);
+      setShowPatternModal(false);
+      setPatternStep('draw');
+      setFirstPattern('');
+      Alert.alert('Success', 'Pattern lock has been set up.');
+    }
+  };
+
+  const handleRemovePattern = async (pattern: string) => {
+    const success = await removePattern(pattern);
+    if (success) {
+      setShowRemovePatternModal(false);
+      Alert.alert('Success', 'Pattern lock removed.');
+    } else {
+      Alert.alert('Error', 'Incorrect pattern.');
+    }
   };
 
   const handleChangePassword = async () => {
@@ -354,6 +417,60 @@ export default function SettingsScreen() {
               </View>
             </>
           )}
+
+          {/* Pattern Lock */}
+          <View style={styles.divider} />
+          {hasPattern ? (
+            <TouchableOpacity style={styles.settingRow} onPress={() => setShowRemovePatternModal(true)}>
+              <View style={styles.settingIconContainer}>
+                <Ionicons name="grid" size={20} color={Colors.primary} />
+              </View>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Pattern Lock</Text>
+                <Text style={styles.settingDescription}>
+                  Tap to change or remove pattern
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.settingRow} onPress={() => setShowPatternModal(true)}>
+              <View style={styles.settingIconContainer}>
+                <Ionicons name="grid" size={20} color={Colors.primary} />
+              </View>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Pattern Lock</Text>
+                <Text style={styles.settingDescription}>
+                  Set a pattern as alternative lock
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          )}
+
+          {/* Device Lock */}
+          {hasDeviceLock && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.settingRow}>
+                <View style={styles.settingIconContainer}>
+                  <Ionicons name="phone-portrait" size={20} color={Colors.primary} />
+                </View>
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingLabel}>Device Lock</Text>
+                  <Text style={styles.settingDescription}>
+                    Use device PIN, pattern, or password
+                  </Text>
+                </View>
+                <Switch
+                  value={deviceLockEnabled}
+                  onValueChange={toggleDeviceLock}
+                  trackColor={{ false: Colors.border, true: Colors.primary + '50' }}
+                  thumbColor={deviceLockEnabled ? Colors.primary : Colors.textTertiary}
+                />
+              </View>
+            </>
+          )}
         </View>
       </View>
 
@@ -580,6 +697,34 @@ export default function SettingsScreen() {
           </View>
           <TouchableOpacity style={styles.modalButton} onPress={() => setShowRecoveryCode(false)}>
             <Text style={styles.modalButtonText}>I've Saved It</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Setup Pattern Modal */}
+      {renderPasswordModal(showPatternModal, () => { setShowPatternModal(false); setPatternStep('draw'); setFirstPattern(''); }, 'Set Pattern Lock',
+        <View style={{ alignItems: 'center' }}>
+          <Text style={styles.modalDescription}>
+            {patternStep === 'draw'
+              ? 'Draw a pattern connecting at least 4 dots.'
+              : 'Draw the same pattern again to confirm.'}
+          </Text>
+          <PatternInput onComplete={handleSetupPattern} />
+          <TouchableOpacity style={[styles.modalButton, { marginTop: Spacing.xl }]} onPress={() => { setShowPatternModal(false); setPatternStep('draw'); setFirstPattern(''); }}>
+            <Text style={styles.modalButtonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Remove Pattern Modal */}
+      {renderPasswordModal(showRemovePatternModal, () => setShowRemovePatternModal(false), 'Remove Pattern Lock',
+        <View style={{ alignItems: 'center' }}>
+          <Text style={styles.modalDescription}>
+            Draw your current pattern to remove pattern lock.
+          </Text>
+          <PatternInput onComplete={handleRemovePattern} />
+          <TouchableOpacity style={[styles.modalButton, { marginTop: Spacing.xl }]} onPress={() => setShowRemovePatternModal(false)}>
+            <Text style={styles.modalButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
       )}

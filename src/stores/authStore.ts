@@ -6,6 +6,8 @@ import * as AuthUtils from '../utils/auth';
 interface AuthState {
   isAuthenticated: boolean;
   hasPassword: boolean;
+  hasPattern: boolean;
+  hasDeviceLock: boolean;
   settings: Settings | null;
   loading: boolean;
   init: () => Promise<void>;
@@ -15,6 +17,10 @@ interface AuthState {
   resetPassword: (recoveryCode: string, newPassword: string) => Promise<boolean>;
   login: (password: string) => Promise<boolean>;
   loginWithBiometric: () => Promise<boolean>;
+  setupPattern: (pattern: string) => Promise<void>;
+  loginWithPattern: (pattern: string) => Promise<boolean>;
+  removePattern: (pattern: string) => Promise<boolean>;
+  loginWithDeviceLock: () => Promise<boolean>;
   logout: () => void;
   skipAuth: () => void;
 }
@@ -22,14 +28,20 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   hasPassword: false,
+  hasPattern: false,
+  hasDeviceLock: false,
   settings: null,
   loading: true,
 
   init: async () => {
     const settings = await getSettings();
+    const pattern = await AuthUtils.hasPattern();
+    const deviceLock = settings?.device_lock_enabled || false;
     set({
       settings,
-      hasPassword: settings !== null,
+      hasPassword: settings !== null && !!settings.password_hash,
+      hasPattern: pattern,
+      hasDeviceLock: deviceLock,
       loading: false,
     });
   },
@@ -55,7 +67,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     const valid = await AuthUtils.verifyPassword(password);
     if (!valid) return false;
 
-    // Clear settings to remove password
     await AuthUtils.clearPassword();
     const settings = await getSettings();
     set({ settings, hasPassword: false });
@@ -79,27 +90,49 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   loginWithBiometric: async () => {
-    const settings = await getSettings();
-    if (!settings?.biometric_enabled) return false;
-
     try {
-      const LocalAuth = require('expo-local-authentication');
-      const hasHardware = await LocalAuth.hasHardwareAsync();
-      const isEnrolled = await LocalAuth.isEnrolledAsync();
-
-      if (!hasHardware || !isEnrolled) return false;
-
-      const result = await LocalAuth.authenticateAsync({
-        promptMessage: 'Authenticate to login',
-        cancelLabel: 'Cancel',
-      });
-
-      if (result.success) {
+      const result = await AuthUtils.authenticateWithDeviceLock();
+      if (result) {
         set({ isAuthenticated: true });
         return true;
       }
     } catch (e) {
-      console.warn('Biometric not available on this platform');
+      console.warn('Biometric not available');
+    }
+    return false;
+  },
+
+  setupPattern: async (pattern: string) => {
+    await AuthUtils.setupPattern(pattern);
+    set({ hasPattern: true, isAuthenticated: true });
+  },
+
+  loginWithPattern: async (pattern: string) => {
+    const valid = await AuthUtils.verifyPattern(pattern);
+    if (valid) {
+      set({ isAuthenticated: true });
+      return true;
+    }
+    return false;
+  },
+
+  removePattern: async (pattern: string) => {
+    const valid = await AuthUtils.verifyPattern(pattern);
+    if (!valid) return false;
+
+    await AuthUtils.removePattern();
+    set({ hasPattern: false });
+    return true;
+  },
+
+  loginWithDeviceLock: async () => {
+    const settings = await getSettings();
+    if (!settings?.device_lock_enabled) return false;
+
+    const result = await AuthUtils.authenticateWithDeviceLock();
+    if (result) {
+      set({ isAuthenticated: true });
+      return true;
     }
     return false;
   },
