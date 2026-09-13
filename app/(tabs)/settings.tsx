@@ -8,7 +8,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { ExportData } from '../../src/types';
 import { encryptData, decryptData } from '../../src/utils/crypto';
 import { getAllEntries, getAllSchedules } from '../../src/db/queries';
-import { updateBiometricSetting, updateDeviceLockSetting, hasDeviceLockHardware } from '../../src/utils/auth';
+import { updateBiometricSetting, updateDeviceLockSetting } from '../../src/utils/auth';
 import PatternInput from '../../src/components/PatternInput';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
@@ -18,7 +18,6 @@ export default function SettingsScreen() {
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [hasBiometric, setHasBiometric] = useState(false);
   const [deviceLockEnabled, setDeviceLockEnabled] = useState(false);
-  const [hasDeviceLock, setHasDeviceLock] = useState(false);
 
   // Modal states
   const [showSetupModal, setShowSetupModal] = useState(false);
@@ -47,7 +46,6 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     checkBiometric();
-    checkDeviceLock();
   }, []);
 
   const checkBiometric = async () => {
@@ -60,11 +58,6 @@ export default function SettingsScreen() {
     } catch {
       setHasBiometric(false);
     }
-  };
-
-  const checkDeviceLock = async () => {
-    const has = await hasDeviceLockHardware();
-    setHasDeviceLock(has);
     setDeviceLockEnabled(settings?.device_lock_enabled || false);
   };
 
