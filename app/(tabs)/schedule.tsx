@@ -14,6 +14,7 @@ export default function ScheduleScreen() {
   const { currentAddictionId } = useAddictionStore();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (currentAddictionId) {
@@ -55,12 +56,16 @@ export default function ScheduleScreen() {
 
   const handleToggle = async (id: string, value: boolean) => {
     console.log('[schedule] handleToggle:', id, value);
+    
+    // Optimistically update UI first
+    const updatedSchedules = schedules.map(s => 
+      s.id === id ? { ...s, is_active: value } : s
+    );
+    useScheduleStore.setState({ schedules: updatedSchedules });
+    
+    // Then update database
     await toggleSchedule(id, value);
-    console.log('[schedule] Reloading schedules...');
-    if (currentAddictionId) {
-      await loadSchedules(currentAddictionId);
-      console.log('[schedule] Schedules reloaded:', schedules.length);
-    }
+    console.log('[schedule] Toggle completed');
   };
 
   const formatDate = (dateStr: string) => {

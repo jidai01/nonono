@@ -90,6 +90,8 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
         await cancelNotification(`schedule_${id}`);
       }
     }
+    
+    // Don't reload schedules here - let the component handle UI updates
   },
 
   deleteSchedule: async (id) => {
