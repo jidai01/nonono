@@ -24,19 +24,21 @@ export default function AddictionDropdown() {
 
   const handleDelete = (addiction: Addiction) => {
     if (addictions.length <= 1) {
-      Alert.alert('Error', 'Cannot delete the last addiction');
+      Alert.alert('Error', 'You need at least one addiction');
       return;
     }
     setShowDropdown(false);
     Alert.alert(
-      'Delete Addiction',
-      `Delete "${addiction.name}" and all its data? This cannot be undone.`,
+      'Delete',
+      `Delete "${addiction.name}"? All its data will be removed.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => deleteAddiction(addiction.id),
+          onPress: async () => {
+            await deleteAddiction(addiction.id);
+          },
         },
       ]
     );
@@ -44,7 +46,7 @@ export default function AddictionDropdown() {
 
   const handleAdd = async () => {
     if (!newName.trim()) {
-      Alert.alert('Error', 'Please enter a name');
+      Alert.alert('Error', 'Enter a name');
       return;
     }
     await addAddiction(newName.trim(), newIcon, newColor);
@@ -81,10 +83,9 @@ export default function AddictionDropdown() {
         <Ionicons name="chevron-down" size={14} color={Colors.textSecondary} />
       </TouchableOpacity>
 
-      {/* Dropdown Modal */}
       <Modal visible={showDropdown} transparent animationType="fade">
         <View style={styles.overlay}>
-          <TouchableOpacity style={styles.overlayClose} onPress={() => setShowDropdown(false)} activeOpacity={1} />
+          <TouchableOpacity style={styles.overlayTouch} onPress={() => setShowDropdown(false)} activeOpacity={1} />
           <View style={styles.dropdown}>
             <Text style={styles.dropdownTitle}>Switch Addiction</Text>
             {addictions.map(addiction => (
@@ -92,7 +93,6 @@ export default function AddictionDropdown() {
                 <TouchableOpacity
                   style={[styles.dropdownItem, addiction.id === currentAddictionId && styles.dropdownItemActive]}
                   onPress={() => handleSelect(addiction)}
-                  onLongPress={() => openEditModal(addiction)}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.dropdownItemIcon}>{addiction.icon}</Text>
@@ -100,118 +100,97 @@ export default function AddictionDropdown() {
                     {addiction.name}
                   </Text>
                   {addiction.id === currentAddictionId && (
-                    <Ionicons name="checkmark" size={20} color={Colors.primary} />
+                    <Ionicons name="checkmark" size={18} color={Colors.primary} />
                   )}
                 </TouchableOpacity>
-                {addictions.length > 1 && (
-                  <TouchableOpacity
-                    style={styles.deleteIconButton}
-                    onPress={() => handleDelete(addiction)}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="trash-outline" size={16} color={Colors.error} />
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity
+                  style={styles.deleteBtn}
+                  onPress={() => handleDelete(addiction)}
+                >
+                  <Ionicons name="trash-outline" size={16} color={Colors.error} />
+                </TouchableOpacity>
               </View>
             ))}
-            <View style={styles.dropdownDivider} />
-            <TouchableOpacity style={styles.dropdownAddButton} onPress={() => { setShowDropdown(false); setShowAddModal(true); }}>
-              <Ionicons name="add-circle" size={20} color={Colors.primary} />
-              <Text style={styles.dropdownAddText}>Add New Addiction</Text>
+            <View style={styles.divider} />
+            <TouchableOpacity style={styles.addBtn} onPress={() => { setShowDropdown(false); setShowAddModal(true); }}>
+              <Ionicons name="add-circle-outline" size={20} color={Colors.primary} />
+              <Text style={styles.addBtnText}>Add New</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.editBtn} onPress={() => { if (currentAddiction) openEditModal(currentAddiction); }}>
+              <Ionicons name="create-outline" size={20} color={Colors.textSecondary} />
+              <Text style={styles.editBtnText}>Edit Current</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* Add Modal */}
       <Modal visible={showAddModal} transparent animationType="slide">
-        <TouchableOpacity style={styles.overlay} onPress={() => setShowAddModal(false)} activeOpacity={1}>
-          <View style={styles.addModal} onStartShouldSetResponder={() => true}>
+        <View style={styles.overlay}>
+          <TouchableOpacity style={styles.overlayTouch} onPress={() => setShowAddModal(false)} activeOpacity={1} />
+          <View style={styles.modal}>
             <View style={styles.modalHeader}>
-              <Text style={styles.addModalTitle}>New Addiction</Text>
+              <Text style={styles.modalTitle}>New Addiction</Text>
               <TouchableOpacity onPress={() => setShowAddModal(false)}>
                 <Ionicons name="close" size={24} color={Colors.textTertiary} />
               </TouchableOpacity>
             </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Name (e.g., Gaming)"
-              placeholderTextColor={Colors.textTertiary}
-              value={newName}
-              onChangeText={setNewName}
-            />
-            <Text style={styles.label}>Choose Icon</Text>
+            <TextInput style={styles.input} placeholder="Name" placeholderTextColor={Colors.textTertiary} value={newName} onChangeText={setNewName} />
+            <Text style={styles.label}>Icon</Text>
             <View style={styles.iconGrid}>
               {PREDEFINED_ADDICTIONS.map(item => (
-                <TouchableOpacity
-                  key={item.icon}
-                  style={[styles.iconOption, newIcon === item.icon && styles.iconOptionActive]}
-                  onPress={() => { setNewIcon(item.icon); setNewColor(item.color); }}
-                >
-                  <Text style={styles.iconOptionText}>{item.icon}</Text>
+                <TouchableOpacity key={item.icon} style={[styles.iconOption, newIcon === item.icon && styles.iconOptionActive]} onPress={() => { setNewIcon(item.icon); setNewColor(item.color); }}>
+                  <Text style={styles.iconText}>{item.icon}</Text>
                 </TouchableOpacity>
               ))}
             </View>
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowAddModal(false)}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+            <View style={styles.btnRow}>
+              <TouchableOpacity style={styles.btnCancel} onPress={() => setShowAddModal(false)}>
+                <Text style={styles.btnCancelText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.confirmButton} onPress={handleAdd}>
-                <Text style={styles.confirmButtonText}>Add</Text>
+              <TouchableOpacity style={styles.btnConfirm} onPress={handleAdd}>
+                <Text style={styles.btnConfirmText}>Add</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
 
-      {/* Edit Modal */}
       <Modal visible={showEditModal} transparent animationType="slide">
-        <TouchableOpacity style={styles.overlay} onPress={() => setShowEditModal(false)} activeOpacity={1}>
-          <View style={styles.addModal} onStartShouldSetResponder={() => true}>
+        <View style={styles.overlay}>
+          <TouchableOpacity style={styles.overlayTouch} onPress={() => setShowEditModal(false)} activeOpacity={1} />
+          <View style={styles.modal}>
             <View style={styles.modalHeader}>
-              <Text style={styles.addModalTitle}>Edit Addiction</Text>
+              <Text style={styles.modalTitle}>Edit Addiction</Text>
               <TouchableOpacity onPress={() => setShowEditModal(false)}>
                 <Ionicons name="close" size={24} color={Colors.textTertiary} />
               </TouchableOpacity>
             </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Name"
-              placeholderTextColor={Colors.textTertiary}
-              value={newName}
-              onChangeText={setNewName}
-            />
-            <Text style={styles.label}>Choose Icon</Text>
+            <TextInput style={styles.input} placeholder="Name" placeholderTextColor={Colors.textTertiary} value={newName} onChangeText={setNewName} />
+            <Text style={styles.label}>Icon</Text>
             <View style={styles.iconGrid}>
               {PREDEFINED_ADDICTIONS.map(item => (
-                <TouchableOpacity
-                  key={item.icon}
-                  style={[styles.iconOption, newIcon === item.icon && styles.iconOptionActive]}
-                  onPress={() => { setNewIcon(item.icon); setNewColor(item.color); }}
-                >
-                  <Text style={styles.iconOptionText}>{item.icon}</Text>
+                <TouchableOpacity key={item.icon} style={[styles.iconOption, newIcon === item.icon && styles.iconOptionActive]} onPress={() => { setNewIcon(item.icon); setNewColor(item.color); }}>
+                  <Text style={styles.iconText}>{item.icon}</Text>
                 </TouchableOpacity>
               ))}
             </View>
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowEditModal(false)}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+            <View style={styles.btnRow}>
+              <TouchableOpacity style={styles.btnCancel} onPress={() => setShowEditModal(false)}>
+                <Text style={styles.btnCancelText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.confirmButton} onPress={handleEdit}>
-                <Text style={styles.confirmButtonText}>Save</Text>
+              <TouchableOpacity style={styles.btnConfirm} onPress={handleEdit}>
+                <Text style={styles.btnConfirmText}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginRight: Spacing.md,
-  },
+  container: { marginRight: Spacing.md },
   dropdownButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -219,11 +198,9 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    gap: Spacing.sm,
+    gap: 6,
   },
-  currentIcon: {
-    fontSize: 16,
-  },
+  currentIcon: { fontSize: 16 },
   currentName: {
     fontSize: Typography.sizes.sm,
     fontWeight: Typography.weights.semibold,
@@ -236,31 +213,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  overlayClose: {
+  overlayTouch: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    top: 0, left: 0, right: 0, bottom: 0,
   },
   dropdown: {
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
-    width: 280,
-    maxHeight: 400,
+    width: 260,
     ...Shadows.large,
   },
   dropdownTitle: {
-    fontSize: Typography.sizes.md,
+    fontSize: Typography.sizes.sm,
     fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.md,
-    paddingHorizontal: Spacing.sm,
+    color: Colors.textTertiary,
+    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   dropdownItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 2,
   },
   dropdownItem: {
     flex: 1,
@@ -268,14 +244,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
-  dropdownItemActive: {
-    backgroundColor: Colors.primary + '10',
-  },
-  dropdownItemIcon: {
-    fontSize: 20,
-  },
+  dropdownItemActive: { backgroundColor: Colors.primary + '10' },
+  dropdownItemIcon: { fontSize: 20 },
   dropdownItemName: {
     flex: 1,
     fontSize: Typography.sizes.md,
@@ -285,32 +257,44 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.primary,
   },
-  deleteIconButton: {
-    padding: Spacing.sm,
-    marginRight: Spacing.xs,
+  deleteBtn: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
   },
-  dropdownDivider: {
+  divider: {
     height: 1,
     backgroundColor: Colors.border,
     marginVertical: Spacing.sm,
   },
-  dropdownAddButton: {
+  addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     gap: Spacing.sm,
   },
-  dropdownAddText: {
+  addBtnText: {
     fontSize: Typography.sizes.md,
     color: Colors.primary,
     fontWeight: Typography.weights.medium,
   },
-  addModal: {
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
+  },
+  editBtnText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    fontWeight: Typography.weights.medium,
+  },
+  modal: {
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.xl,
     padding: Spacing.xl,
-    width: 320,
+    width: 300,
     ...Shadows.large,
   },
   modalHeader: {
@@ -319,7 +303,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.lg,
   },
-  addModalTitle: {
+  modalTitle: {
     fontSize: Typography.sizes.lg,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
@@ -345,9 +329,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   iconOption: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
@@ -358,33 +342,31 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
     backgroundColor: Colors.primary + '10',
   },
-  iconOptionText: {
-    fontSize: 22,
-  },
-  buttonRow: {
+  iconText: { fontSize: 20 },
+  btnRow: {
     flexDirection: 'row',
     gap: Spacing.md,
   },
-  cancelButton: {
+  btnCancel: {
     flex: 1,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     backgroundColor: Colors.background,
     alignItems: 'center',
   },
-  cancelButtonText: {
+  btnCancelText: {
     fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
     fontWeight: Typography.weights.medium,
   },
-  confirmButton: {
+  btnConfirm: {
     flex: 1,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     backgroundColor: Colors.primary,
     alignItems: 'center',
   },
-  confirmButtonText: {
+  btnConfirmText: {
     fontSize: Typography.sizes.md,
     color: Colors.textInverse,
     fontWeight: Typography.weights.semibold,
