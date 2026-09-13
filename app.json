@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Nonono",
+    "name": "nonono",
     "slug": "nonono",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -40,7 +40,7 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Allow Nonono to use Face ID for quick login"
+          "faceIDPermission": "Allow nonono to use Face ID for quick login"
         }
       ]
     ],

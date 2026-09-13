@@ -439,7 +439,7 @@ export default function SettingsScreen() {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Nonono v1.0.0</Text>
+        <Text style={styles.footerText}>nonono v1.0.0</Text>
         <Text style={styles.footerSubtext}>Data is stored locally on your device</Text>
       </View>
 

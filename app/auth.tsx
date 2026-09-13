@@ -148,7 +148,7 @@ export default function AuthScreen() {
           </View>
 
           {/* App Name */}
-          <Text style={styles.appName}>Nonono</Text>
+          <Text style={styles.appName}>nonono</Text>
           <Text style={styles.tagline}>Your recovery journey starts here</Text>
 
           {/* Form Card */}
