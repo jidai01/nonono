@@ -5,6 +5,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useJournalStore } from '../../src/stores/journalStore';
 import { useAddictionStore } from '../../src/stores/addictionStore';
+import { Schedule } from '../../src/types';
+import { getSchedulesByDate } from '../../src/db/queries';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function CalendarScreen() {
@@ -20,6 +22,7 @@ export default function CalendarScreen() {
     longestStreak: 0,
   });
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  const [selectedSchedules, setSelectedSchedules] = useState<Schedule[]>([]);
 
   useEffect(() => {
     if (currentAddictionId) {
@@ -61,6 +64,8 @@ export default function CalendarScreen() {
     if (currentAddictionId) {
       const entry = await loadEntryByDate(day.dateString, currentAddictionId);
       setSelectedEntry(entry);
+      const schedules = await getSchedulesByDate(day.dateString, currentAddictionId);
+      setSelectedSchedules(schedules);
     }
   }, [currentAddictionId]);
 
@@ -170,19 +175,54 @@ export default function CalendarScreen() {
               )}
             </View>
 
+            {/* Schedules for this date */}
+            {selectedSchedules.length > 0 && (
+              <View style={styles.schedulesContainer}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="time-outline" size={18} color={Colors.primary} />
+                  <Text style={styles.sectionHeaderText}>Schedule ({selectedSchedules.length})</Text>
+                </View>
+                {selectedSchedules.map((schedule) => (
+                  <TouchableOpacity
+                    key={schedule.id}
+                    style={styles.scheduleItem}
+                    onPress={() => router.push(`/schedule/edit?id=${schedule.id}`)}
+                  >
+                    <View style={styles.scheduleTimeContainer}>
+                      <Text style={styles.scheduleTime}>{schedule.time}</Text>
+                    </View>
+                    <View style={styles.scheduleInfo}>
+                      <Text style={styles.scheduleTitle}>{schedule.title}</Text>
+                      {schedule.description ? (
+                        <Text style={styles.scheduleDescription} numberOfLines={1}>{schedule.description}</Text>
+                      ) : null}
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={Colors.textTertiary} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {/* Journal Entry */}
             {selectedEntry ? (
               <TouchableOpacity style={styles.entryPreview} onPress={handleViewEntry}>
-                <View style={styles.entryPreviewHeader}>
-                  <Text style={styles.entryMood}>
-                    {selectedEntry.mood === 1 ? '😞' : selectedEntry.mood === 2 ? '😔' : selectedEntry.mood === 3 ? '😐' : selectedEntry.mood === 4 ? '🙂' : '😊'}
-                  </Text>
-                  <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="book-outline" size={18} color={Colors.info} />
+                  <Text style={styles.sectionHeaderText}>Journal Entry</Text>
                 </View>
-                {selectedEntry.feelings ? (
-                  <Text style={styles.entryFeelings} numberOfLines={2}>
-                    {selectedEntry.feelings}
-                  </Text>
-                ) : null}
+                <View style={styles.entryPreviewContent}>
+                  <View style={styles.entryPreviewHeader}>
+                    <Text style={styles.entryMood}>
+                      {selectedEntry.mood === 1 ? '😞' : selectedEntry.mood === 2 ? '😔' : selectedEntry.mood === 3 ? '😐' : selectedEntry.mood === 4 ? '🙂' : '😊'}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
+                  </View>
+                  {selectedEntry.feelings ? (
+                    <Text style={styles.entryFeelings} numberOfLines={2}>
+                      {selectedEntry.feelings}
+                    </Text>
+                  ) : null}
+                </View>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity style={styles.addEntryButton} onPress={handleAddEntry}>
@@ -194,7 +234,7 @@ export default function CalendarScreen() {
         ) : (
           <View style={styles.noDateSelected}>
             <Ionicons name="calendar-outline" size={32} color={Colors.textTertiary} />
-            <Text style={styles.noDateText}>Select a date to view or add entry</Text>
+            <Text style={styles.noDateText}>Select a date to view schedules and entries</Text>
           </View>
         )}
       </View>

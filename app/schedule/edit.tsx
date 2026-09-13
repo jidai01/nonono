@@ -11,6 +11,8 @@ import {
   Platform,
   Modal,
   FlatList,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -135,7 +137,10 @@ export default function EditScheduleScreen() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
     >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.dismiss()} style={styles.closeButton}>
@@ -147,7 +152,11 @@ export default function EditScheduleScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.content} 
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Activity Selector */}
         {activityNames.length > 0 && (
           <View style={styles.section}>
@@ -380,6 +389,8 @@ export default function EditScheduleScreen() {
           </View>
         </View>
       </Modal>
+      </View>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, Modal, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useJournalStore } from '../../src/stores/journalStore';
 import { useAddictionStore } from '../../src/stores/addictionStore';
@@ -162,82 +162,90 @@ export default function ActivitiesScreen() {
         animationType="fade"
         onRequestClose={() => setShowModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{editingActivity ? 'Edit Activity' : 'Add Activity'}</Text>
-              <TouchableOpacity onPress={() => setShowModal(false)} style={styles.modalCloseButton}>
-                <Ionicons name="close" size={24} color={Colors.textTertiary} />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.sectionLabel}>Common Activities</Text>
-            <Text style={styles.sectionDescription}>Tap to select a quick activity type</Text>
-            <View style={styles.predefinedContainer}>
-              {PREDEFINED_ACTIVITIES.map(activity => (
-                <TouchableOpacity
-                  key={activity}
-                  style={[
-                    styles.predefinedChip,
-                    selectedPredefined === activity && styles.predefinedChipSelected,
-                  ]}
-                  onPress={() => {
-                    setSelectedPredefined(activity);
-                    setActivityName('');
-                  }}
-                >
-                  <Text style={[
-                    styles.predefinedChipText,
-                    selectedPredefined === activity && styles.predefinedChipTextSelected,
-                  ]}>
-                    {activity}
-                  </Text>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{editingActivity ? 'Edit Activity' : 'Add Activity'}</Text>
+                <TouchableOpacity onPress={() => setShowModal(false)} style={styles.modalCloseButton}>
+                  <Ionicons name="close" size={24} color={Colors.textTertiary} />
                 </TouchableOpacity>
-              ))}
+              </View>
+
+              <ScrollView keyboardShouldPersistTaps="handled">
+                <Text style={styles.sectionLabel}>Common Activities</Text>
+                <Text style={styles.sectionDescription}>Tap to select a quick activity type</Text>
+                <View style={styles.predefinedContainer}>
+                  {PREDEFINED_ACTIVITIES.map(activity => (
+                    <TouchableOpacity
+                      key={activity}
+                      style={[
+                        styles.predefinedChip,
+                        selectedPredefined === activity && styles.predefinedChipSelected,
+                      ]}
+                      onPress={() => {
+                        setSelectedPredefined(activity);
+                        setActivityName('');
+                      }}
+                    >
+                      <Text style={[
+                        styles.predefinedChipText,
+                        selectedPredefined === activity && styles.predefinedChipTextSelected,
+                      ]}>
+                        {activity}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.inputLabel}>Activity Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Or type a custom activity name..."
+                  placeholderTextColor={Colors.textTertiary}
+                  value={activityName}
+                  onChangeText={text => {
+                    setActivityName(text);
+                    setSelectedPredefined(null);
+                  }}
+                />
+
+                <Text style={styles.inputLabel}>Duration (minutes)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g., 30"
+                  placeholderTextColor={Colors.textTertiary}
+                  keyboardType="numeric"
+                  value={duration}
+                  onChangeText={setDuration}
+                />
+
+                <Text style={styles.inputLabel}>Notes</Text>
+                <TextInput
+                  style={[styles.input, styles.notesInput]}
+                  placeholder="Add any notes about this activity (optional)"
+                  placeholderTextColor={Colors.textTertiary}
+                  multiline
+                  value={notes}
+                  onChangeText={setNotes}
+                />
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity style={styles.cancelButton} onPress={() => setShowModal(false)}>
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.addButton} onPress={handleSave}>
+                    <Text style={styles.addButtonText}>{editingActivity ? 'Update' : 'Add'}</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
             </View>
-
-            <Text style={styles.inputLabel}>Activity Name *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Or type a custom activity name..."
-              placeholderTextColor={Colors.textTertiary}
-              value={activityName}
-              onChangeText={text => {
-                setActivityName(text);
-                setSelectedPredefined(null);
-              }}
-            />
-
-            <Text style={styles.inputLabel}>Duration (minutes)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g., 30"
-              placeholderTextColor={Colors.textTertiary}
-              keyboardType="numeric"
-              value={duration}
-              onChangeText={setDuration}
-            />
-
-            <Text style={styles.inputLabel}>Notes</Text>
-            <TextInput
-              style={[styles.input, styles.notesInput]}
-              placeholder="Add any notes about this activity (optional)"
-              placeholderTextColor={Colors.textTertiary}
-              multiline
-              value={notes}
-              onChangeText={setNotes}
-            />
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowModal(false)}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.addButton} onPress={handleSave}>
-                <Text style={styles.addButtonText}>{editingActivity ? 'Update' : 'Add'}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

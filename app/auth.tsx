@@ -9,6 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -137,8 +139,14 @@ export default function AuthScreen() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.content}>
           {/* Logo */}
           <View style={styles.logoContainer}>
@@ -315,6 +323,7 @@ export default function AuthScreen() {
           </Text>
         </View>
       </ScrollView>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }

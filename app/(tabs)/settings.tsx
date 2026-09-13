@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert, ScrollView, TextInput, Modal, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert, ScrollView, TextInput, Modal, Platform, KeyboardAvoidingView, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/stores/authStore';
@@ -329,17 +329,23 @@ export default function SettingsScreen() {
     children: React.ReactNode
   ) => (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{title}</Text>
-            <TouchableOpacity onPress={onClose} style={styles.modalCloseButton}>
-              <Ionicons name="close" size={24} color={Colors.textTertiary} />
-            </TouchableOpacity>
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{title}</Text>
+              <TouchableOpacity onPress={onClose} style={styles.modalCloseButton}>
+                <Ionicons name="close" size={24} color={Colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
+            {children}
           </View>
-          {children}
-        </View>
-      </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 
