@@ -526,10 +526,11 @@ export default function SettingsScreen() {
               Save it somewhere safe — it's the only way to reset your password if you forget it.
             </Text>
           </View>
+          <Text style={styles.inputLabel}>New Password</Text>
           <View style={styles.modalInputContainer}>
             <TextInput
               style={styles.modalInput}
-              placeholder="Enter password"
+              placeholder="Enter a secure password"
               placeholderTextColor={Colors.textTertiary}
               secureTextEntry={!showPassword}
               value={password}
@@ -539,10 +540,12 @@ export default function SettingsScreen() {
               <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={20} color={Colors.textTertiary} />
             </TouchableOpacity>
           </View>
+          <Text style={styles.inputHint}>Minimum 6 characters</Text>
+          <Text style={styles.inputLabel}>Confirm Password</Text>
           <View style={styles.modalInputContainer}>
             <TextInput
               style={styles.modalInput}
-              placeholder="Confirm password"
+              placeholder="Re-enter your password"
               placeholderTextColor={Colors.textTertiary}
               secureTextEntry={!showConfirmPassword}
               value={confirmPassword}
@@ -561,10 +564,14 @@ export default function SettingsScreen() {
       {/* Change Password Modal */}
       {renderPasswordModal(showChangeModal, () => setShowChangeModal(false), 'Change Password',
         <View>
+          <Text style={styles.modalDescription}>
+            Enter your current password and set a new one.
+          </Text>
+          <Text style={styles.inputLabel}>Current Password</Text>
           <View style={styles.modalInputContainer}>
             <TextInput
               style={styles.modalInput}
-              placeholder="Current password"
+              placeholder="Enter your current password"
               placeholderTextColor={Colors.textTertiary}
               secureTextEntry={!showCurrentPassword}
               value={currentPassword}
@@ -574,10 +581,11 @@ export default function SettingsScreen() {
               <Ionicons name={showCurrentPassword ? 'eye' : 'eye-off'} size={20} color={Colors.textTertiary} />
             </TouchableOpacity>
           </View>
+          <Text style={styles.inputLabel}>New Password</Text>
           <View style={styles.modalInputContainer}>
             <TextInput
               style={styles.modalInput}
-              placeholder="New password"
+              placeholder="Enter a new password"
               placeholderTextColor={Colors.textTertiary}
               secureTextEntry={!showNewPassword}
               value={newPassword}
@@ -587,10 +595,12 @@ export default function SettingsScreen() {
               <Ionicons name={showNewPassword ? 'eye' : 'eye-off'} size={20} color={Colors.textTertiary} />
             </TouchableOpacity>
           </View>
+          <Text style={styles.inputHint}>Minimum 6 characters</Text>
+          <Text style={styles.inputLabel}>Confirm New Password</Text>
           <View style={styles.modalInputContainer}>
             <TextInput
               style={styles.modalInput}
-              placeholder="Confirm new password"
+              placeholder="Re-enter your new password"
               placeholderTextColor={Colors.textTertiary}
               secureTextEntry={!showConfirmPassword}
               value={confirmPassword}
@@ -612,10 +622,11 @@ export default function SettingsScreen() {
           <Text style={styles.modalDescription}>
             Enter your password to remove password protection.
           </Text>
+          <Text style={styles.inputLabel}>Current Password</Text>
           <View style={styles.modalInputContainer}>
             <TextInput
               style={styles.modalInput}
-              placeholder="Enter password"
+              placeholder="Enter your password to confirm"
               placeholderTextColor={Colors.textTertiary}
               secureTextEntry={!showCurrentPassword}
               value={currentPassword}
@@ -643,18 +654,20 @@ export default function SettingsScreen() {
               Your recovery code was shown when you first set your password (e.g., <Text style={styles.bold}>ABCD-1234-EFGH-5678</Text>).
             </Text>
           </View>
+          <Text style={styles.inputLabel}>Recovery Code</Text>
           <TextInput
             style={styles.modalInput}
-            placeholder="Recovery code"
+            placeholder="Enter your recovery code"
             placeholderTextColor={Colors.textTertiary}
             value={recoveryCode}
             onChangeText={setRecoveryCode}
             autoCapitalize="characters"
           />
+          <Text style={styles.inputLabel}>New Password</Text>
           <View style={styles.modalInputContainer}>
             <TextInput
               style={styles.modalInput}
-              placeholder="New password"
+              placeholder="Enter a new password"
               placeholderTextColor={Colors.textTertiary}
               secureTextEntry={!showNewPassword}
               value={newPassword}
@@ -664,10 +677,12 @@ export default function SettingsScreen() {
               <Ionicons name={showNewPassword ? 'eye' : 'eye-off'} size={20} color={Colors.textTertiary} />
             </TouchableOpacity>
           </View>
+          <Text style={styles.inputHint}>Minimum 6 characters</Text>
+          <Text style={styles.inputLabel}>Confirm New Password</Text>
           <View style={styles.modalInputContainer}>
             <TextInput
               style={styles.modalInput}
-              placeholder="Confirm new password"
+              placeholder="Re-enter your new password"
               placeholderTextColor={Colors.textTertiary}
               secureTextEntry={!showConfirmPassword}
               value={confirmPassword}
@@ -848,6 +863,19 @@ const styles = StyleSheet.create({
   },
   bold: {
     fontWeight: Typography.weights.semibold,
+  },
+  inputLabel: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.medium,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  inputHint: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textTertiary,
+    marginTop: -Spacing.sm,
+    marginBottom: Spacing.sm,
   },
   modalButton: {
     backgroundColor: Colors.primary,

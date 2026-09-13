@@ -156,51 +156,61 @@ export default function AuthScreen() {
             {!isSetup ? (
               <>
                 <Text style={styles.formTitle}>Create Your Password</Text>
+                <Text style={styles.formDescription}>
+                  Set a password to keep your journal entries private.
+                </Text>
                 
                 {/* Password Input */}
-                <View style={styles.inputContainer}>
-                  <Ionicons name="lock-closed-outline" size={20} color={Colors.textTertiary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter password"
-                    placeholderTextColor={Colors.textTertiary}
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={setPassword}
-                  />
-                  <TouchableOpacity
-                    style={styles.eyeButton}
-                    onPress={() => setShowPassword(!showPassword)}
-                  >
-                    <Ionicons
-                      name={showPassword ? 'eye' : 'eye-off'}
-                      size={20}
-                      color={Colors.textTertiary}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Password</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="lock-closed-outline" size={20} color={Colors.textTertiary} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter a secure password"
+                      placeholderTextColor={Colors.textTertiary}
+                      secureTextEntry={!showPassword}
+                      value={password}
+                      onChangeText={setPassword}
                     />
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.eyeButton}
+                      onPress={() => setShowPassword(!showPassword)}
+                    >
+                      <Ionicons
+                        name={showPassword ? 'eye' : 'eye-off'}
+                        size={20}
+                        color={Colors.textTertiary}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.inputHint}>Minimum 6 characters</Text>
                 </View>
 
                 {/* Confirm Password Input */}
-                <View style={styles.inputContainer}>
-                  <Ionicons name="lock-closed-outline" size={20} color={Colors.textTertiary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirm password"
-                    placeholderTextColor={Colors.textTertiary}
-                    secureTextEntry={!showConfirmPassword}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                  />
-                  <TouchableOpacity
-                    style={styles.eyeButton}
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    <Ionicons
-                      name={showConfirmPassword ? 'eye' : 'eye-off'}
-                      size={20}
-                      color={Colors.textTertiary}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Confirm Password</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="lock-closed-outline" size={20} color={Colors.textTertiary} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Re-enter your password"
+                      placeholderTextColor={Colors.textTertiary}
+                      secureTextEntry={!showConfirmPassword}
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
                     />
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.eyeButton}
+                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      <Ionicons
+                        name={showConfirmPassword ? 'eye' : 'eye-off'}
+                        size={20}
+                        color={Colors.textTertiary}
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {/* Password Match Indicator */}
@@ -234,28 +244,34 @@ export default function AuthScreen() {
             ) : (
               <>
                 <Text style={styles.formTitle}>Welcome Back</Text>
+                <Text style={styles.formDescription}>
+                  Enter your password to access your journal.
+                </Text>
                 
                 {/* Password Input */}
-                <View style={styles.inputContainer}>
-                  <Ionicons name="lock-closed-outline" size={20} color={Colors.textTertiary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter password"
-                    placeholderTextColor={Colors.textTertiary}
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={setPassword}
-                  />
-                  <TouchableOpacity
-                    style={styles.eyeButton}
-                    onPress={() => setShowPassword(!showPassword)}
-                  >
-                    <Ionicons
-                      name={showPassword ? 'eye' : 'eye-off'}
-                      size={20}
-                      color={Colors.textTertiary}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Password</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="lock-closed-outline" size={20} color={Colors.textTertiary} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your password"
+                      placeholderTextColor={Colors.textTertiary}
+                      secureTextEntry={!showPassword}
+                      value={password}
+                      onChangeText={setPassword}
                     />
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.eyeButton}
+                      onPress={() => setShowPassword(!showPassword)}
+                    >
+                      <Ionicons
+                        name={showPassword ? 'eye' : 'eye-off'}
+                        size={20}
+                        color={Colors.textTertiary}
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {/* Login Button */}
@@ -355,8 +371,31 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.xl,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.sm,
     textAlign: 'center',
+  },
+  formDescription: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+    lineHeight: Typography.sizes.sm * 1.5,
+  },
+  inputGroup: {
+    marginBottom: Spacing.md,
+  },
+  inputLabel: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.medium,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+    marginLeft: Spacing.xs,
+  },
+  inputHint: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textTertiary,
+    marginTop: Spacing.xs,
+    marginLeft: Spacing.xs,
   },
   inputContainer: {
     flexDirection: 'row',

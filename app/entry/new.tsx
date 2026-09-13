@@ -84,6 +84,7 @@ export default function NewEntryScreen() {
       {/* Mood Selection */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>How are you feeling?</Text>
+        <Text style={styles.sectionDescription}>Select the mood that best describes your day</Text>
         <View style={styles.moodContainer}>
           {[1, 2, 3, 4, 5].map((level) => (
             <TouchableOpacity
@@ -111,11 +112,12 @@ export default function NewEntryScreen() {
       {/* Feelings */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>What's on your mind?</Text>
+        <Text style={styles.sectionDescription}>Write about your thoughts, feelings, or what happened today</Text>
         <TextInput
           style={styles.textArea}
           multiline
           numberOfLines={4}
-          placeholder="Share your thoughts, feelings, or what happened today..."
+          placeholder="I felt great today because..."
           placeholderTextColor={Colors.textTertiary}
           value={feelings}
           onChangeText={setFeelings}
@@ -124,6 +126,8 @@ export default function NewEntryScreen() {
 
       {/* Relapse Toggle */}
       <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Relapse Status</Text>
+        <Text style={styles.sectionDescription}>Mark this day if you experienced a relapse</Text>
         <TouchableOpacity
           style={[styles.relapseToggle, isRelapse && styles.relapseToggleActive]}
           onPress={() => setIsRelapse(!isRelapse)}
@@ -152,12 +156,13 @@ export default function NewEntryScreen() {
       {/* Relapse Notes */}
       {isRelapse && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>What happened? (optional)</Text>
+          <Text style={styles.sectionTitle}>What happened?</Text>
+          <Text style={styles.sectionDescription}>Understanding what happened can help prevent it next time (optional)</Text>
           <TextInput
             style={styles.textArea}
             multiline
             numberOfLines={3}
-            placeholder="Understanding what happened can help prevent it next time..."
+            placeholder="I relapsed because..."
             placeholderTextColor={Colors.textTertiary}
             value={relapseNotes}
             onChangeText={setRelapseNotes}
@@ -199,8 +204,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.medium,
-    color: Colors.textSecondary,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  sectionDescription: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textTertiary,
     marginBottom: Spacing.md,
   },
   moodContainer: {

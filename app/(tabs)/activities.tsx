@@ -136,7 +136,11 @@ export default function ActivitiesScreen() {
             <Ionicons name="fitness-outline" size={48} color={Colors.primary} />
           </View>
           <Text style={styles.emptyTitle}>No Activities Yet</Text>
-          <Text style={styles.emptySubtitle}>Record the prevention activities you've done</Text>
+          <Text style={styles.emptySubtitle}>Activities help you track what you do to stay on track. Add activities like exercise, reading, or meditation.</Text>
+          <TouchableOpacity style={styles.emptyButton} onPress={openAddModal}>
+            <Ionicons name="add-circle" size={20} color={Colors.textInverse} />
+            <Text style={styles.emptyButtonText}>Add Your First Activity</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
@@ -168,6 +172,7 @@ export default function ActivitiesScreen() {
             </View>
 
             <Text style={styles.sectionLabel}>Common Activities</Text>
+            <Text style={styles.sectionDescription}>Tap to select a quick activity type</Text>
             <View style={styles.predefinedContainer}>
               {PREDEFINED_ACTIVITIES.map(activity => (
                 <TouchableOpacity
@@ -191,9 +196,10 @@ export default function ActivitiesScreen() {
               ))}
             </View>
 
+            <Text style={styles.inputLabel}>Activity Name *</Text>
             <TextInput
               style={styles.input}
-              placeholder="Or enter custom activity..."
+              placeholder="Or type a custom activity name..."
               placeholderTextColor={Colors.textTertiary}
               value={activityName}
               onChangeText={text => {
@@ -202,18 +208,20 @@ export default function ActivitiesScreen() {
               }}
             />
 
+            <Text style={styles.inputLabel}>Duration (minutes)</Text>
             <TextInput
               style={styles.input}
-              placeholder="Duration (minutes)"
+              placeholder="e.g., 30"
               placeholderTextColor={Colors.textTertiary}
               keyboardType="numeric"
               value={duration}
               onChangeText={setDuration}
             />
 
+            <Text style={styles.inputLabel}>Notes</Text>
             <TextInput
               style={[styles.input, styles.notesInput]}
-              placeholder="Notes (optional)"
+              placeholder="Add any notes about this activity (optional)"
               placeholderTextColor={Colors.textTertiary}
               multiline
               value={notes}
@@ -313,6 +321,22 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.textTertiary,
     textAlign: 'center',
+    marginBottom: Spacing.xl,
+    lineHeight: Typography.sizes.md * 1.5,
+  },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  emptyButtonText: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textInverse,
   },
   fab: {
     position: 'absolute',
@@ -357,6 +381,11 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: Typography.sizes.sm,
     fontWeight: Typography.weights.medium,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xs,
+  },
+  sectionDescription: {
+    fontSize: Typography.sizes.xs,
     color: Colors.textTertiary,
     marginBottom: Spacing.md,
   },
@@ -384,6 +413,13 @@ const styles = StyleSheet.create({
   },
   predefinedChipTextSelected: {
     color: Colors.textInverse,
+  },
+  inputLabel: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.medium,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.md,
   },
   input: {
     backgroundColor: Colors.background,

@@ -122,7 +122,8 @@ export default function NewScheduleScreen() {
         {/* Activity Selector */}
         {activityNames.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Select Activity</Text>
+            <Text style={styles.sectionTitle}>Quick Fill from Activity</Text>
+            <Text style={styles.sectionDescription}>Select an existing activity to auto-fill the title</Text>
             <TouchableOpacity
               style={styles.activitySelector}
               onPress={() => setShowActivityPicker(true)}
@@ -138,12 +139,13 @@ export default function NewScheduleScreen() {
 
         {/* Title Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Schedule Title</Text>
+          <Text style={styles.sectionTitle}>Schedule Title *</Text>
+          <Text style={styles.sectionDescription}>What activity do you want to schedule?</Text>
           <View style={styles.inputContainer}>
             <Ionicons name="pencil" size={18} color={Colors.textTertiary} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="e.g., Morning Exercise"
+              placeholder="e.g., Morning Exercise, Reading Time"
               placeholderTextColor={Colors.textTertiary}
               value={title}
               onChangeText={setTitle}
@@ -153,10 +155,11 @@ export default function NewScheduleScreen() {
 
         {/* Description Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Description (optional)</Text>
+          <Text style={styles.sectionTitle}>Description</Text>
+          <Text style={styles.sectionDescription}>Add details about this schedule (optional)</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder="Details about the activity..."
+            placeholder="e.g., 30 minutes of cardio at the park"
             placeholderTextColor={Colors.textTertiary}
             multiline
             textAlignVertical="top"
@@ -167,7 +170,8 @@ export default function NewScheduleScreen() {
 
         {/* Date Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Date</Text>
+          <Text style={styles.sectionTitle}>Date *</Text>
+          <Text style={styles.sectionDescription}>When should this activity happen?</Text>
           <TouchableOpacity
             style={styles.dateSelector}
             onPress={() => setShowCalendar(!showCalendar)}
@@ -217,7 +221,8 @@ export default function NewScheduleScreen() {
 
         {/* Time Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Time</Text>
+          <Text style={styles.sectionTitle}>Time *</Text>
+          <Text style={styles.sectionDescription}>What time should this activity start?</Text>
           <TouchableOpacity
             style={styles.timeSelector}
             onPress={() => setShowTimePicker(true)}
@@ -409,6 +414,11 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  sectionDescription: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textTertiary,
     marginBottom: Spacing.md,
   },
   inputContainer: {
