@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -50,10 +50,30 @@ export default function NewScheduleScreen() {
   const initialMinute = time.split(':')[1];
   const [selectedHour, setSelectedHour] = useState(initialHour);
   const [selectedMinute, setSelectedMinute] = useState(initialMinute);
+  
+  const hourListRef = useRef<FlatList>(null);
+  const minuteListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     loadActivities();
   }, []);
+
+  useEffect(() => {
+    if (showTimePicker) {
+      // Scroll to selected values when modal opens
+      setTimeout(() => {
+        const hourIndex = HOURS.indexOf(selectedHour);
+        const minuteIndex = MINUTES.indexOf(selectedMinute);
+        
+        if (hourIndex >= 0 && hourListRef.current) {
+          hourListRef.current.scrollToIndex({ index: hourIndex, animated: false });
+        }
+        if (minuteIndex >= 0 && minuteListRef.current) {
+          minuteListRef.current.scrollToIndex({ index: minuteIndex, animated: false });
+        }
+      }, 100);
+    }
+  }, [showTimePicker]);
 
   const loadActivities = async () => {
     const names = await getUniqueActivityNames();
@@ -467,10 +487,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
-    gap: Spacing.md,
     ...Shadows.small,
   },
   dateText: {
@@ -478,6 +498,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.textPrimary,
     fontWeight: Typography.weights.medium,
+    marginLeft: Spacing.md,
   },
   calendarContainer: {
     marginTop: Spacing.md,
@@ -493,10 +514,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
-    gap: Spacing.md,
     ...Shadows.small,
   },
   timeText: {
@@ -504,6 +525,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.lg,
     color: Colors.primary,
     fontWeight: Typography.weights.semibold,
+    marginLeft: Spacing.md,
   },
   modalOverlay: {
     flex: 1,

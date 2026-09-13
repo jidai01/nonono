@@ -54,8 +54,37 @@ export default function ScheduleScreen() {
     );
   };
 
+  const isSchedulePast = (schedule: Schedule): boolean => {
+    const now = new Date();
+    const scheduleDateTime = new Date(`${schedule.date}T${schedule.time}:00`);
+    return scheduleDateTime < now;
+  };
+
   const handleToggle = async (id: string, value: boolean) => {
     console.log('[schedule] handleToggle:', id, value);
+    
+    const schedule = schedules.find(s => s.id === id);
+    
+    if (value && schedule && isSchedulePast(schedule)) {
+      Alert.alert(
+        'Schedule Already Passed',
+        `"${schedule.title}" is scheduled for ${formatDate(schedule.date)} at ${schedule.time}, which has already passed.\n\nDo you still want to activate it?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Activate Anyway',
+            onPress: async () => {
+              const updatedSchedules = schedules.map(s => 
+                s.id === id ? { ...s, is_active: value } : s
+              );
+              useScheduleStore.setState({ schedules: updatedSchedules });
+              await toggleSchedule(id, value);
+            },
+          },
+        ]
+      );
+      return;
+    }
     
     // Optimistically update UI first
     const updatedSchedules = schedules.map(s => 
@@ -87,49 +116,59 @@ export default function ScheduleScreen() {
     });
   };
 
-  const renderSchedule = ({ item }: { item: Schedule }) => (
-    <View style={[styles.scheduleCard, !item.is_active && styles.scheduleCardInactive]}>
-      <TouchableOpacity
-        style={styles.scheduleContent}
-        onPress={() => router.push(`/schedule/edit?id=${item.id}`)}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.scheduleIconContainer, !item.is_active && styles.scheduleIconInactive]}>
-          <Ionicons name="time" size={20} color={item.is_active ? Colors.primary : Colors.textTertiary} />
-        </View>
-        <View style={styles.scheduleInfo}>
-          <Text style={[styles.scheduleTitle, !item.is_active && styles.scheduleTitleInactive]}>{item.title}</Text>
-          <Text style={[styles.scheduleTime, !item.is_active && styles.scheduleTimeInactive]}>{item.time}</Text>
-        </View>
-      </TouchableOpacity>
-      <View style={styles.scheduleActions}>
-        {item.description ? (
-          <Text style={[styles.scheduleDescription, !item.is_active && styles.scheduleDescriptionInactive]} numberOfLines={2}>{item.description}</Text>
-        ) : null}
-        <View style={styles.scheduleFooter}>
-          <View style={[styles.statusBadge, item.is_active ? styles.statusBadgeActive : styles.statusBadgeInactive]}>
-            <Text style={[styles.statusText, item.is_active ? styles.statusTextActive : styles.statusTextInactive]}>
-              {item.is_active ? 'Active' : 'Paused'}
-            </Text>
+  const renderSchedule = ({ item }: { item: Schedule }) => {
+    const isPast = isSchedulePast(item);
+    
+    return (
+      <View style={[styles.scheduleCard, !item.is_active && styles.scheduleCardInactive, isPast && styles.scheduleCardPast]}>
+        <TouchableOpacity
+          style={styles.scheduleContent}
+          onPress={() => router.push(`/schedule/edit?id=${item.id}`)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.scheduleIconContainer, !item.is_active && styles.scheduleIconInactive, isPast && styles.scheduleIconPast]}>
+            <Ionicons name="time" size={20} color={isPast ? Colors.warning : item.is_active ? Colors.primary : Colors.textTertiary} />
           </View>
-          <View style={styles.footerRight}>
-            <Switch
-              value={item.is_active}
-              onValueChange={(value) => handleToggle(item.id, value)}
-              trackColor={{ false: Colors.border, true: Colors.primary + '50' }}
-              thumbColor={item.is_active ? Colors.primary : Colors.textTertiary}
-            />
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleDeleteSchedule(item.id)}
-            >
-              <Ionicons name="trash-outline" size={18} color={Colors.error} />
-            </TouchableOpacity>
+          <View style={styles.scheduleInfo}>
+            <Text style={[styles.scheduleTitle, !item.is_active && styles.scheduleTitleInactive]}>{item.title}</Text>
+            <Text style={[styles.scheduleTime, !item.is_active && styles.scheduleTimeInactive, isPast && styles.scheduleTimePast]}>{item.time}</Text>
+          </View>
+        </TouchableOpacity>
+        <View style={styles.scheduleActions}>
+          {isPast && (
+            <View style={styles.pastWarning}>
+              <Ionicons name="warning" size={14} color={Colors.warning} />
+              <Text style={styles.pastWarningText}>This schedule has already passed</Text>
+            </View>
+          )}
+          {item.description ? (
+            <Text style={[styles.scheduleDescription, !item.is_active && styles.scheduleDescriptionInactive]} numberOfLines={2}>{item.description}</Text>
+          ) : null}
+          <View style={styles.scheduleFooter}>
+            <View style={[styles.statusBadge, item.is_active ? styles.statusBadgeActive : styles.statusBadgeInactive]}>
+              <Text style={[styles.statusText, item.is_active ? styles.statusTextActive : styles.statusTextInactive]}>
+                {item.is_active ? 'Active' : 'Paused'}
+              </Text>
+            </View>
+            <View style={styles.footerRight}>
+              <Switch
+                value={item.is_active}
+                onValueChange={(value) => handleToggle(item.id, value)}
+                trackColor={{ false: Colors.border, true: Colors.primary + '50' }}
+                thumbColor={item.is_active ? Colors.primary : Colors.textTertiary}
+              />
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteSchedule(item.id)}
+              >
+                <Ionicons name="trash-outline" size={18} color={Colors.error} />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -272,6 +311,10 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     opacity: 0.8,
   },
+  scheduleCardPast: {
+    borderColor: Colors.warning + '50',
+    backgroundColor: Colors.surface,
+  },
   scheduleContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -293,6 +336,9 @@ const styles = StyleSheet.create({
   scheduleIconInactive: {
     backgroundColor: Colors.border + '50',
   },
+  scheduleIconPast: {
+    backgroundColor: Colors.warning + '15',
+  },
   scheduleInfo: {
     flex: 1,
   },
@@ -312,6 +358,23 @@ const styles = StyleSheet.create({
   },
   scheduleTimeInactive: {
     color: Colors.textTertiary,
+  },
+  scheduleTimePast: {
+    color: Colors.warning,
+  },
+  pastWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginBottom: Spacing.md,
+    padding: Spacing.sm,
+    backgroundColor: Colors.warning + '10',
+    borderRadius: BorderRadius.sm,
+  },
+  pastWarningText: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.warning,
+    fontWeight: Typography.weights.medium,
   },
   scheduleDescription: {
     fontSize: Typography.sizes.sm,
