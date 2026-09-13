@@ -29,7 +29,16 @@ export async function seedTestData(database: SQLite.SQLiteDatabase) {
     `);
 
     await seedGamingData(database);
+    console.log('[seeder] Gaming data seeded, now seeding Smoking...');
+
     await seedSmokingData(database);
+    console.log('[seeder] Smoking data seeded');
+
+    // Verify
+    const smokingEntries = await database.getFirstAsync<{ count: number }>(
+      "SELECT COUNT(*) as count FROM journal_entries WHERE addiction_id = 'addiction_smoking'"
+    );
+    console.log(`[seeder] Smoking entries in DB: ${smokingEntries?.count || 0}`);
 
     console.log('[seeder] Done! Seeded Gaming and Smoking addictions');
 
