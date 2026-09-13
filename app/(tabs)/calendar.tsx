@@ -184,14 +184,6 @@ export default function CalendarScreen() {
           </View>
         )}
       </View>
-
-      {/* Quick Add Button */}
-      {!selectedEntry && selectedDate && (
-        <TouchableOpacity style={styles.quickAddButton} onPress={handleAddEntry}>
-          <Ionicons name="pencil" size={20} color={Colors.textInverse} />
-          <Text style={styles.quickAddText}>Write Today's Entry</Text>
-        </TouchableOpacity>
-      )}
     </ScrollView>
   );
 }
@@ -355,20 +347,5 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.sm,
     color: Colors.textTertiary,
     marginTop: Spacing.sm,
-  },
-  quickAddButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
-    gap: Spacing.sm,
-    ...Shadows.medium,
-  },
-  quickAddText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textInverse,
   },
 });
