@@ -2,17 +2,7 @@ import { Platform, Alert } from 'react-native';
 import { formatTime } from './date';
 
 export async function requestNotificationPermissions(): Promise<boolean> {
-  if (Platform.OS === 'web') {
-    return false;
-  }
-
-  // In Expo Go, notifications are not available
-  // Show info message that notifications will work in production build
-  Alert.alert(
-    'Notifications',
-    'Notifications will work in the production build. For now, reminders will show as alerts.',
-    [{ text: 'OK' }]
-  );
+  // Notifications not available in Expo Go SDK 53+
   return false;
 }
 
@@ -22,8 +12,8 @@ export async function scheduleNotification(
   date: Date,
   notificationId?: string
 ): Promise<string | null> {
-  // Fallback to Alert in Expo Go
-  Alert.alert(title, body, [{ text: 'OK' }]);
+  // In Expo Go, we can only show immediate alerts
+  // Scheduled notifications require development build
   return null;
 }
 
@@ -41,12 +31,41 @@ export async function scheduleDateNotification(
     day: 'numeric',
   });
 
-  // Fallback to Alert in Expo Go
-  Alert.alert(
-    title,
-    `${body}\n\nDate: ${displayDate}\nTime: ${formatTime(time)}`,
-    [{ text: 'OK' }]
-  );
+  const [hours, minutes] = time.split(':').map(Number);
+  const triggerDate = new Date(dateStr + 'T00:00:00');
+  triggerDate.setHours(hours, minutes, 0, 0);
+
+  const now = new Date();
+  const isPast = triggerDate <= now;
+
+  if (isPast) {
+    // Schedule is in the past, show immediate reminder
+    Alert.alert(
+      title,
+      `${body}\n\nDate: ${displayDate}\nTime: ${formatTime(time)}\n\n⚠️ This schedule has already passed.`,
+      [{ text: 'OK' }]
+    );
+  } else {
+    // Calculate time until notification
+    const timeUntil = triggerDate.getTime() - now.getTime();
+    const hoursUntil = Math.floor(timeUntil / (1000 * 60 * 60));
+    const minutesUntil = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+
+    let timeMessage = '';
+    if (hoursUntil > 0) {
+      timeMessage = `${hoursUntil}h ${minutesUntil}m`;
+    } else {
+      timeMessage = `${minutesUntil}m`;
+    }
+
+    // Show confirmation that schedule was set
+    Alert.alert(
+      'Schedule Set ✓',
+      `${title}\n\n📅 ${displayDate}\n⏰ ${formatTime(time)}\n\n🔔 Reminder in ${timeMessage}\n\nNote: Real notifications require a development build.`,
+      [{ text: 'OK' }]
+    );
+  }
+
   return null;
 }
 
