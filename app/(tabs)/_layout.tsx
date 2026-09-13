@@ -54,25 +54,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="journal"
-        options={{
-          title: 'Journal',
-          headerTitle: 'Daily Journal',
-          tabBarIcon: ({ color, size }) => (
-            <View style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: color + '15',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-              <Ionicons name="book" size={22} color={color} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="activities"
         options={{
           title: 'Activities',
