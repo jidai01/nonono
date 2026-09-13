@@ -132,6 +132,14 @@ export async function deleteActivity(id: string): Promise<void> {
   await db.runAsync('DELETE FROM activities WHERE id = ?', [id]);
 }
 
+export async function getUniqueActivityNames(): Promise<string[]> {
+  const db = await getDatabase();
+  const rows = await db.getAllAsync<{ name: string }>(
+    'SELECT DISTINCT name FROM activities ORDER BY name'
+  );
+  return rows.map(r => r.name);
+}
+
 // Schedules
 export async function getAllSchedules(): Promise<Schedule[]> {
   const db = await getDatabase();

@@ -16,6 +16,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { useScheduleStore } from '../../src/stores/scheduleStore';
+import { getUniqueActivityNames } from '../../src/db/queries';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
@@ -39,11 +40,14 @@ export default function EditScheduleScreen() {
   const [time, setTime] = useState('09:00');
   const [showCalendar, setShowCalendar] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showActivityPicker, setShowActivityPicker] = useState(false);
+  const [activityNames, setActivityNames] = useState<string[]>([]);
   const [selectedHour, setSelectedHour] = useState('09');
   const [selectedMinute, setSelectedMinute] = useState('00');
 
   useEffect(() => {
     loadSchedules();
+    loadActivities();
   }, []);
 
   useEffect(() => {
@@ -59,6 +63,16 @@ export default function EditScheduleScreen() {
       }
     }
   }, [id, schedules]);
+
+  const loadActivities = async () => {
+    const names = await getUniqueActivityNames();
+    setActivityNames(names);
+  };
+
+  const handleSelectActivity = (name: string) => {
+    setTitle(name);
+    setShowActivityPicker(false);
+  };
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -132,6 +146,23 @@ export default function EditScheduleScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Activity Selector */}
+        {activityNames.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Select Activity</Text>
+            <TouchableOpacity
+              style={styles.activitySelector}
+              onPress={() => setShowActivityPicker(true)}
+            >
+              <Ionicons name="fitness" size={18} color={Colors.primary} />
+              <Text style={styles.activitySelectorText}>
+                {title || 'Choose from existing activities'}
+              </Text>
+              <Ionicons name="chevron-down" size={18} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Title Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Schedule Title</Text>
@@ -300,6 +331,45 @@ export default function EditScheduleScreen() {
                 {formatTimeDisplay(`${selectedHour}:${selectedMinute}`)}
               </Text>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Activity Picker Modal */}
+      <Modal
+        visible={showActivityPicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowActivityPicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.activityPickerContent}>
+            <View style={styles.activityPickerHeader}>
+              <TouchableOpacity onPress={() => setShowActivityPicker(false)}>
+                <Text style={styles.activityPickerCancel}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.activityPickerTitle}>Select Activity</Text>
+              <View style={{ width: 60 }} />
+            </View>
+            <FlatList
+              data={activityNames}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.activityItem}
+                  onPress={() => handleSelectActivity(item)}
+                >
+                  <Ionicons name="fitness" size={18} color={Colors.primary} />
+                  <Text style={styles.activityItemText}>{item}</Text>
+                  {title === item && (
+                    <Ionicons name="checkmark" size={18} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>No activities found</Text>
+              }
+            />
           </View>
         </View>
       </Modal>
@@ -509,5 +579,65 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.xxl,
     fontWeight: Typography.weights.bold,
     color: Colors.primary,
+  },
+  activitySelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.md,
+    ...Shadows.small,
+  },
+  activitySelectorText: {
+    flex: 1,
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
+    fontWeight: Typography.weights.medium,
+  },
+  activityPickerContent: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
+    maxHeight: '60%',
+  },
+  activityPickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  activityPickerTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+  },
+  activityPickerCancel: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textTertiary,
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+    gap: Spacing.md,
+  },
+  activityItemText: {
+    flex: 1,
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
+  },
+  emptyText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textTertiary,
+    textAlign: 'center',
+    paddingVertical: Spacing.xxl,
   },
 });
