@@ -17,6 +17,10 @@ export async function saveSettings(settings: Settings): Promise<void> {
   await SecureStore.setItemAsync(SETTINGS_KEY, JSON.stringify(settings));
 }
 
+export async function deleteSettings(): Promise<void> {
+  await SecureStore.deleteItemAsync(SETTINGS_KEY);
+}
+
 export async function hasSettings(): Promise<boolean> {
   const settings = await getSettings();
   return settings !== null;

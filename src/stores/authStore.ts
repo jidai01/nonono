@@ -1,24 +1,28 @@
 import { create } from 'zustand';
 import { Settings } from '../types';
-import { getSettings } from '../db/queries';
+import { getSettings, saveSettings } from '../db/queries';
 import * as AuthUtils from '../utils/auth';
 import * as LocalAuth from 'expo-local-authentication';
 
 interface AuthState {
   isAuthenticated: boolean;
-  isSetupComplete: boolean;
+  hasPassword: boolean;
   settings: Settings | null;
   loading: boolean;
   init: () => Promise<void>;
   setupPassword: (password: string) => Promise<string>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
+  removePassword: (password: string) => Promise<boolean>;
+  resetPassword: (recoveryCode: string, newPassword: string) => Promise<boolean>;
   login: (password: string) => Promise<boolean>;
   loginWithBiometric: () => Promise<boolean>;
   logout: () => void;
+  skipAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
-  isSetupComplete: false,
+  hasPassword: false,
   settings: null,
   loading: true,
 
@@ -26,7 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     const settings = await getSettings();
     set({
       settings,
-      isSetupComplete: settings !== null,
+      hasPassword: settings !== null,
       loading: false,
     });
   },
@@ -34,8 +38,39 @@ export const useAuthStore = create<AuthState>((set) => ({
   setupPassword: async (password: string) => {
     const { recoveryCode } = await AuthUtils.createPassword(password);
     const settings = await getSettings();
-    set({ settings, isSetupComplete: true, isAuthenticated: true });
+    set({ settings, hasPassword: true, isAuthenticated: true });
     return recoveryCode;
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    const valid = await AuthUtils.verifyPassword(currentPassword);
+    if (!valid) return false;
+
+    await AuthUtils.createPassword(newPassword);
+    const settings = await getSettings();
+    set({ settings });
+    return true;
+  },
+
+  removePassword: async (password: string) => {
+    const valid = await AuthUtils.verifyPassword(password);
+    if (!valid) return false;
+
+    // Clear settings to remove password
+    await AuthUtils.clearPassword();
+    const settings = await getSettings();
+    set({ settings, hasPassword: false });
+    return true;
+  },
+
+  resetPassword: async (recoveryCode: string, newPassword: string) => {
+    const valid = await AuthUtils.verifyRecoveryCode(recoveryCode);
+    if (!valid) return false;
+
+    await AuthUtils.createPassword(newPassword);
+    const settings = await getSettings();
+    set({ settings, hasPassword: true, isAuthenticated: true });
+    return true;
   },
 
   login: async (password: string) => {
@@ -67,5 +102,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     set({ isAuthenticated: false });
+  },
+
+  skipAuth: () => {
+    set({ isAuthenticated: true });
   },
 }));

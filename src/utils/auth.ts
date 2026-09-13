@@ -72,6 +72,11 @@ export async function updateBiometricSetting(enabled: boolean): Promise<void> {
   }
 }
 
+export async function clearPassword(): Promise<void> {
+  const { deleteSettings } = require('../db/queries');
+  await deleteSettings();
+}
+
 export async function resetAllData(): Promise<void> {
   const { deleteEntry, deleteSchedule } = require('../db/queries');
   const { getDatabase } = require('../db/schema');
