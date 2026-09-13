@@ -13,7 +13,7 @@ export async function seedTestData(database: SQLite.SQLiteDatabase) {
       return;
     }
 
-    console.log('[seeder] Starting seed...');
+    console.log('[seeder] Starting seed for Aug 1 - Sep 12, 2026...');
 
     const entries: string[] = [];
     const activities: string[] = [];
@@ -88,6 +88,8 @@ export async function seedTestData(database: SQLite.SQLiteDatabase) {
 
     const startDate = new Date('2026-08-01');
     const endDate = new Date('2026-09-12');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
@@ -134,9 +136,6 @@ export async function seedTestData(database: SQLite.SQLiteDatabase) {
       );
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
     for (let i = 0; i < scheduleTitles.length; i++) {
       const schedDate = new Date(today);
       schedDate.setDate(schedDate.getDate() + i);
@@ -147,21 +146,15 @@ export async function seedTestData(database: SQLite.SQLiteDatabase) {
       );
     }
 
-    console.log(`[seeder] Inserting ${entries.length} entries...`);
-
     await database.execAsync(`
       INSERT OR IGNORE INTO journal_entries (id, date, mood, feelings, is_relapse, relapse_notes, created_at, updated_at)
       VALUES ${entries.join(',\n')};
     `);
 
-    console.log(`[seeder] Inserting ${activities.length} activities...`);
-
     await database.execAsync(`
       INSERT OR IGNORE INTO activities (id, name, duration_minutes, notes, created_at)
       VALUES ${activities.join(',\n')};
     `);
-
-    console.log(`[seeder] Inserting ${schedules.length} schedules...`);
 
     await database.execAsync(`
       INSERT OR IGNORE INTO schedules (id, title, description, date, time, is_active, created_at)
@@ -171,14 +164,15 @@ export async function seedTestData(database: SQLite.SQLiteDatabase) {
     const countCheck = await database.getFirstAsync<{ count: number }>(
       'SELECT COUNT(*) as count FROM journal_entries'
     );
-    console.log(`[seeder] Done! Total entries now: ${countCheck?.count || 0}`);
+    console.log(`[seeder] Done! Total entries: ${countCheck?.count || 0}`);
 
   } catch (error) {
     console.error('[seeder] Error:', error);
   }
 }
 
-export async function resetAndReseed(database: SQLite.SQLiteDatabase) {
+export async function forceReseed(database: SQLite.SQLiteDatabase) {
+  console.log('[seeder] Force reseeding...');
   await database.execAsync('DELETE FROM journal_entries');
   await database.execAsync('DELETE FROM activities');
   await database.execAsync('DELETE FROM schedules');

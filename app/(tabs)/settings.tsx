@@ -9,6 +9,8 @@ import { ExportData } from '../../src/types';
 import { encryptData, decryptData } from '../../src/utils/crypto';
 import { getAllEntries, getAllActivities, getAllSchedules } from '../../src/db/queries';
 import { updateBiometricSetting, updateDeviceLockSetting } from '../../src/utils/auth';
+import { getDatabase } from '../../src/db/schema';
+import { forceReseed } from '../../src/db/seeder';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function SettingsScreen() {
@@ -242,6 +244,29 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleReseed = () => {
+    Alert.alert(
+      'Reset Test Data',
+      'This will delete all data and reload test data (Aug 1 - Sep 12, 2026). Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const database = await getDatabase();
+              await forceReseed(database);
+              Alert.alert('Done', 'Test data has been reloaded.');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to reseed data');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleImport = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -456,6 +481,21 @@ export default function SettingsScreen() {
               <Text style={styles.settingLabel}>Import Data</Text>
               <Text style={styles.settingDescription}>
                 Import data from a previous backup
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+
+          <TouchableOpacity style={styles.settingRow} onPress={handleReseed}>
+            <View style={[styles.settingIconContainer, { backgroundColor: Colors.warning + '15' }]}>
+              <Ionicons name="refresh" size={20} color={Colors.warning} />
+            </View>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Reset Test Data</Text>
+              <Text style={styles.settingDescription}>
+                Reload sample data for testing
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />

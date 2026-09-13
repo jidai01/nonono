@@ -45,6 +45,7 @@ export default function EntryDetailScreen() {
   };
 
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
     const date = new Date(dateStr + 'T00:00:00');
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -74,6 +75,11 @@ export default function EntryDetailScreen() {
     );
   }
 
+  const mood = (currentEntry.mood || 3) as MoodLevel;
+  const feelings = currentEntry.feelings || '';
+  const relapseNotes = currentEntry.relapse_notes || '';
+  const isRelapse = !!currentEntry.is_relapse;
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -98,12 +104,12 @@ export default function EntryDetailScreen() {
 
         {/* Mood */}
         <View style={styles.moodSection}>
-          <Text style={styles.moodEmoji}>{MOOD_EMOJIS[currentEntry.mood as MoodLevel]}</Text>
-          <Text style={styles.moodLabel}>{MOOD_LABELS[currentEntry.mood as MoodLevel]}</Text>
+          <Text style={styles.moodEmoji}>{MOOD_EMOJIS[mood]}</Text>
+          <Text style={styles.moodLabel}>{MOOD_LABELS[mood]}</Text>
         </View>
 
         {/* Relapse Badge */}
-        {currentEntry.is_relapse && (
+        {isRelapse && (
           <View style={styles.relapseBadge}>
             <Ionicons name="alert-circle" size={16} color={Colors.error} />
             <Text style={styles.relapseBadgeText}>Relapse</Text>
@@ -111,20 +117,20 @@ export default function EntryDetailScreen() {
         )}
 
         {/* Feelings */}
-        {currentEntry.feelings ? (
+        {feelings.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Feelings</Text>
-            <Text style={styles.sectionContent}>{currentEntry.feelings}</Text>
+            <Text style={styles.sectionContent}>{feelings}</Text>
           </View>
-        ) : null}
+        )}
 
         {/* Relapse Notes */}
-        {currentEntry.is_relapse && currentEntry.relapse_notes ? (
+        {isRelapse && relapseNotes.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Relapse Notes</Text>
-            <Text style={styles.sectionContent}>{currentEntry.relapse_notes}</Text>
+            <Text style={styles.sectionContent}>{relapseNotes}</Text>
           </View>
-        ) : null}
+        )}
       </View>
     </View>
   );

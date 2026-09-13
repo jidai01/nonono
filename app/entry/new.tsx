@@ -25,10 +25,10 @@ export default function NewEntryScreen() {
 
   useEffect(() => {
     if (currentEntry) {
-      setMood(currentEntry.mood as MoodLevel);
-      setFeelings(currentEntry.feelings);
-      setIsRelapse(currentEntry.is_relapse);
-      setRelapseNotes(currentEntry.relapse_notes);
+      setMood((currentEntry.mood || 3) as MoodLevel);
+      setFeelings(currentEntry.feelings || '');
+      setIsRelapse(!!currentEntry.is_relapse);
+      setRelapseNotes(currentEntry.relapse_notes || '');
     }
   }, [currentEntry]);
 
