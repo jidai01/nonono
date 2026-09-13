@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Schedule } from '../types';
 import * as db from '../db/queries';
 import * as Crypto from 'expo-crypto';
-import { scheduleDateNotification, cancelNotification, requestNotificationPermissions } from '../utils/notifications';
+import { scheduleDateNotification, cancelNotification } from '../utils/notifications';
 
 interface ScheduleState {
   schedules: Schedule[];
@@ -11,7 +11,7 @@ interface ScheduleState {
   loadSchedulesByDate: (date: string, addictionId: string) => Promise<void>;
   addSchedule: (schedule: Omit<Schedule, 'id' | 'created_at'>) => Promise<void>;
   updateSchedule: (schedule: Schedule) => Promise<void>;
-  toggleSchedule: (id: string, isActive: boolean) => Promise<boolean>;
+  toggleSchedule: (id: string, isActive: boolean) => Promise<void>;
   deleteSchedule: (id: string) => Promise<void>;
 }
 
@@ -33,14 +33,6 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
 
   addSchedule: async (schedule) => {
     const id = Crypto.randomUUID();
-    
-    if (schedule.is_active) {
-      const hasPermission = await requestNotificationPermissions();
-      if (!hasPermission) {
-        schedule.is_active = false;
-      }
-    }
-    
     await db.upsertSchedule({ ...schedule, id });
 
     if (schedule.is_active) {
@@ -55,13 +47,6 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
   },
 
   updateSchedule: async (schedule) => {
-    if (schedule.is_active) {
-      const hasPermission = await requestNotificationPermissions();
-      if (!hasPermission) {
-        schedule.is_active = false;
-      }
-    }
-    
     await db.upsertSchedule(schedule);
 
     if (schedule.is_active) {
@@ -80,14 +65,6 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
   toggleSchedule: async (id, isActive) => {
     const schedule = (await db.getAllSchedules()).find(s => s.id === id);
     if (schedule) {
-      if (isActive) {
-        const hasPermission = await requestNotificationPermissions();
-        if (!hasPermission) {
-          await db.upsertSchedule({ ...schedule, is_active: false });
-          return false;
-        }
-      }
-      
       await db.upsertSchedule({ ...schedule, is_active: isActive });
 
       if (isActive) {
@@ -101,9 +78,7 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
       } else {
         await cancelNotification(`schedule_${id}`);
       }
-      return true;
     }
-    return false;
   },
 
   deleteSchedule: async (id) => {
