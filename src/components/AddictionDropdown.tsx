@@ -28,20 +28,18 @@ export default function AddictionDropdown() {
       return;
     }
     setShowDropdown(false);
-    setTimeout(() => {
-      Alert.alert(
-        'Delete Addiction',
-        `Delete "${addiction.name}" and all its data? This cannot be undone.`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => deleteAddiction(addiction.id),
-          },
-        ]
-      );
-    }, 300);
+    Alert.alert(
+      'Delete Addiction',
+      `Delete "${addiction.name}" and all its data? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteAddiction(addiction.id),
+        },
+      ]
+    );
   };
 
   const handleAdd = async () => {
@@ -72,7 +70,7 @@ export default function AddictionDropdown() {
     setNewIcon(addiction.icon);
     setNewColor(addiction.color);
     setShowDropdown(false);
-    setTimeout(() => setShowEditModal(true), 300);
+    setShowEditModal(true);
   };
 
   return (
@@ -85,7 +83,8 @@ export default function AddictionDropdown() {
 
       {/* Dropdown Modal */}
       <Modal visible={showDropdown} transparent animationType="fade">
-        <TouchableOpacity style={styles.overlay} onPress={() => setShowDropdown(false)} activeOpacity={1}>
+        <View style={styles.overlay}>
+          <TouchableOpacity style={styles.overlayClose} onPress={() => setShowDropdown(false)} activeOpacity={1} />
           <View style={styles.dropdown}>
             <Text style={styles.dropdownTitle}>Switch Addiction</Text>
             {addictions.map(addiction => (
@@ -116,12 +115,12 @@ export default function AddictionDropdown() {
               </View>
             ))}
             <View style={styles.dropdownDivider} />
-            <TouchableOpacity style={styles.dropdownAddButton} onPress={() => { setShowDropdown(false); setTimeout(() => setShowAddModal(true), 300); }}>
+            <TouchableOpacity style={styles.dropdownAddButton} onPress={() => { setShowDropdown(false); setShowAddModal(true); }}>
               <Ionicons name="add-circle" size={20} color={Colors.primary} />
               <Text style={styles.dropdownAddText}>Add New Addiction</Text>
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
 
       {/* Add Modal */}
@@ -236,6 +235,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  overlayClose: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   dropdown: {
     backgroundColor: Colors.surface,
