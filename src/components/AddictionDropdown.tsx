@@ -171,8 +171,18 @@ export default function AddictionDropdown() {
               ))}
             </View>
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowEditModal(false)}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+              <TouchableOpacity
+                style={[styles.cancelButton, addictions.length <= 1 && { opacity: 0.4 }]}
+                onPress={() => {
+                  if (editingAddiction && addictions.length > 1) {
+                    setShowEditModal(false);
+                    handleDelete(editingAddiction);
+                  }
+                }}
+                disabled={addictions.length <= 1}
+              >
+                <Ionicons name="trash" size={18} color={Colors.error} />
+                <Text style={[styles.cancelButtonText, { color: Colors.error }]}>Delete</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.confirmButton} onPress={handleEdit}>
                 <Text style={styles.confirmButtonText}>Save</Text>
