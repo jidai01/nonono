@@ -12,7 +12,7 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
 async function initDatabase(database: SQLite.SQLiteDatabase) {
   await database.execAsync(`
     PRAGMA journal_mode = WAL;
-    PRAGMA foreign_keys = ON;
+    PRAGMA foreign_keys = OFF;
 
     CREATE TABLE IF NOT EXISTS settings (
       id INTEGER PRIMARY KEY DEFAULT 1,
@@ -34,21 +34,48 @@ async function initDatabase(database: SQLite.SQLiteDatabase) {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
-    CREATE TABLE IF NOT EXISTS activities (
-      id TEXT PRIMARY KEY,
-      entry_id TEXT NOT NULL,
-      name TEXT NOT NULL,
-      duration_minutes INTEGER DEFAULT 0,
-      notes TEXT DEFAULT '',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (entry_id) REFERENCES journal_entries(id) ON DELETE CASCADE
-    );
-
     CREATE INDEX IF NOT EXISTS idx_journal_date ON journal_entries(date);
-    CREATE INDEX IF NOT EXISTS idx_activities_entry ON activities(entry_id);
   `);
 
+  await migrateActivities(database);
   await migrateSchedules(database);
+}
+
+async function migrateActivities(database: SQLite.SQLiteDatabase) {
+  const tableInfo = await database.getFirstAsync<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='activities'"
+  );
+
+  if (!tableInfo) {
+    await database.execAsync(`
+      CREATE TABLE activities (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        duration_minutes INTEGER DEFAULT 0,
+        notes TEXT DEFAULT '',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    return;
+  }
+
+  const columns = await database.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(activities)"
+  );
+  const hasEntryId = columns.some(c => c.name === 'entry_id');
+
+  if (hasEntryId) {
+    await database.execAsync(`DROP TABLE IF EXISTS activities`);
+    await database.execAsync(`
+      CREATE TABLE activities (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        duration_minutes INTEGER DEFAULT 0,
+        notes TEXT DEFAULT '',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+  }
 }
 
 async function migrateSchedules(database: SQLite.SQLiteDatabase) {

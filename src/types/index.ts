@@ -21,7 +21,6 @@ export interface JournalEntry {
 
 export interface Activity {
   id: string;
-  entry_id: string;
   name: string;
   duration_minutes: number;
   notes: string;
@@ -42,7 +41,6 @@ export interface ExportData {
   version: string;
   exported_at: string;
   settings: Omit<Settings, 'id'>;
-  journal_entries: JournalEntry[];
   activities: Activity[];
   schedules: Schedule[];
 }

@@ -103,23 +103,22 @@ export async function deleteEntry(id: string): Promise<void> {
 }
 
 // Activities
-export async function getActivitiesByEntry(entryId: string): Promise<Activity[]> {
+export async function getAllActivities(): Promise<Activity[]> {
   const db = await getDatabase();
   return db.getAllAsync<Activity>(
-    'SELECT * FROM activities WHERE entry_id = ? ORDER BY created_at',
-    [entryId]
+    'SELECT * FROM activities ORDER BY created_at DESC'
   );
 }
 
-export async function addActivity(activity: Omit<Activity, 'created_at'>): Promise<void> {
+export async function addActivity(activity: Omit<Activity, 'created_at' | 'entry_id'>): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    'INSERT INTO activities (id, entry_id, name, duration_minutes, notes) VALUES (?, ?, ?, ?, ?)',
-    [activity.id, activity.entry_id, activity.name, activity.duration_minutes, activity.notes]
+    'INSERT INTO activities (id, name, duration_minutes, notes) VALUES (?, ?, ?, ?)',
+    [activity.id, activity.name, activity.duration_minutes, activity.notes]
   );
 }
 
-export async function updateActivity(activity: Activity): Promise<void> {
+export async function updateActivity(activity: Omit<Activity, 'created_at' | 'entry_id'>): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
     'UPDATE activities SET name = ?, duration_minutes = ?, notes = ? WHERE id = ?',

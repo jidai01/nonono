@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useJournalStore } from '../../src/stores/journalStore';
@@ -7,6 +7,16 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/ty
 
 export default function ActivitiesScreen() {
   const { activities, loadActivities, addActivity, updateActivity, deleteActivity } = useJournalStore();
+  const [showModal, setShowModal] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [activityName, setActivityName] = useState('');
+  const [duration, setDuration] = useState('');
+  const [notes, setNotes] = useState('');
+  const [selectedPredefined, setSelectedPredefined] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadActivities();
+  }, []);
   const [showModal, setShowModal] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [activityName, setActivityName] = useState('');
@@ -39,7 +49,6 @@ export default function ActivitiesScreen() {
     }
 
     const name = selectedPredefined || activityName;
-    const today = new Date().toISOString().split('T')[0];
 
     if (editingActivity) {
       await updateActivity({
@@ -50,7 +59,6 @@ export default function ActivitiesScreen() {
       });
     } else {
       await addActivity({
-        entry_id: today,
         name,
         duration_minutes: parseInt(duration) || 0,
         notes,
