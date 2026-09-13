@@ -2,12 +2,14 @@ import { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Typography, Shadows } from '../../src/types/theme';
 import { useAddictionStore } from '../../src/stores/addictionStore';
 import AddictionDropdown from '../../src/components/AddictionDropdown';
 
 export default function TabLayout() {
   const { loadAddictions, ensureDefaultAddiction } = useAddictionStore();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     ensureDefaultAddiction().then(() => loadAddictions());
@@ -22,8 +24,8 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: Colors.surface,
           borderTopWidth: 0,
-          height: 70,
-          paddingBottom: 10,
+          height: 70 + insets.bottom,
+          paddingBottom: insets.bottom + 10,
           paddingTop: 8,
           ...Shadows.medium,
         },
