@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Schedule } from '../types';
 import * as db from '../db/queries';
 import * as Crypto from 'expo-crypto';
-import { scheduleDateNotification, cancelNotification, requestNotificationPermissions } from '../utils/notifications';
+import { scheduleDateNotification, cancelNotification } from '../utils/notifications';
 
 interface ScheduleState {
   schedules: Schedule[];
@@ -33,11 +33,6 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
 
   addSchedule: async (schedule) => {
     const id = Crypto.randomUUID();
-    
-    if (schedule.is_active) {
-      await requestNotificationPermissions();
-    }
-    
     await db.upsertSchedule({ ...schedule, id });
 
     if (schedule.is_active) {
@@ -52,10 +47,6 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
   },
 
   updateSchedule: async (schedule) => {
-    if (schedule.is_active) {
-      await requestNotificationPermissions();
-    }
-    
     await db.upsertSchedule(schedule);
 
     if (schedule.is_active) {
@@ -74,10 +65,6 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
   toggleSchedule: async (id, isActive) => {
     const schedule = (await db.getAllSchedules()).find(s => s.id === id);
     if (schedule) {
-      if (isActive) {
-        await requestNotificationPermissions();
-      }
-      
       await db.upsertSchedule({ ...schedule, is_active: isActive });
 
       if (isActive) {
