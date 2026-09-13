@@ -28,88 +28,177 @@ export async function seedTestData(database: SQLite.SQLiteDatabase) {
       VALUES ${addictions.join(',\n')};
     `);
 
-    await seedAddictionData(database, 'addiction_gaming', {
-      relapseDates: ['2026-08-07', '2026-08-19', '2026-08-31', '2026-09-08'],
-      activities: [
-        { name: 'Exercise', duration: 30 },
-        { name: 'Reading', duration: 45 },
-        { name: 'Nature Walk', duration: 60 },
-        { name: 'Call a Friend', duration: 20 },
-        { name: 'Journaling', duration: 15 },
-      ],
-      schedules: [
-        { title: 'Morning Exercise', time: '07:00' },
-        { title: 'Reading Time', time: '10:00' },
-        { title: 'Evening Walk', time: '17:00' },
-      ],
-    });
+    await seedGamingData(database);
+    await seedSmokingData(database);
 
-    await seedAddictionData(database, 'addiction_smoking', {
-      relapseDates: ['2026-08-12', '2026-08-28', '2026-09-05'],
-      activities: [
-        { name: 'Deep Breathing', duration: 10 },
-        { name: 'Meditation', duration: 20 },
-        { name: 'Chewing Gum', duration: 5 },
-        { name: 'Walking', duration: 30 },
-        { name: 'Drinking Water', duration: 5 },
-      ],
-      schedules: [
-        { title: 'Morning Meditation', time: '06:30' },
-        { title: 'Break Walk', time: '10:00' },
-        { title: 'Deep Breathing', time: '14:00' },
-        { title: 'Evening Exercise', time: '18:00' },
-      ],
-    });
-
-    console.log('[seeder] Done! Seeded 2 addictions with data');
+    console.log('[seeder] Done! Seeded Gaming and Smoking addictions');
 
   } catch (error) {
     console.error('[seeder] Error:', error);
   }
 }
 
-async function seedAddictionData(
-  database: SQLite.SQLiteDatabase,
-  addictionId: string,
-  config: {
-    relapseDates: string[];
-    activities: { name: string; duration: number }[];
-    schedules: { title: string; time: string }[];
-  }
-) {
+async function seedGamingData(database: SQLite.SQLiteDatabase) {
+  const addictionId = 'addiction_gaming';
+
   const startDate = new Date('2026-08-01');
   const endDate = new Date('2026-09-12');
   const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
   const feelings = [
-    'Feeling good today. Stayed busy with work.',
-    'Had some cravings but managed to push through.',
-    'Great day! Felt really strong.',
-    'Struggled a bit today. Felt lonely.',
-    'Productive day. Finished a project.',
-    'Feeling grateful for another sober day.',
-    'Tough day but I made it through.',
-    'Meditated this morning. Set a good tone.',
-    'Spent time with family. Reminded me why I am doing this.',
-    'Feeling a bit down but staying positive.',
+    'Spent the day working on a project. Focused and productive.',
+    'Went to the gym. Physical activity helps resist the urge.',
+    'Read a book today. Found a new hobby to replace gaming.',
+    'Had a good conversation with a friend about my goals.',
+    'Feeling bored but resisting the urge to game.',
+    'Completed my to-do list. Feeling accomplished.',
+    'Went for a walk instead of gaming. Fresh air helped.',
+    'Tried cooking a new recipe. Keeping my hands busy.',
+    'Meditated for 15 minutes. Mind feels clearer.',
+    'Played guitar instead of video games. Enjoying music.',
+    'Went to the library. Found some great books.',
+    'Cleaned my room. Organized space, organized mind.',
+    'Had a productive day at work. No gaming urges.',
+    'Feeling proud of myself for staying strong.',
+    'One day at a time. Today was a win.',
+    'Cravings were strong but I pushed through.',
+    'Spent time learning something new online.',
+    'Went for a run. Exercise really helps.',
+    'Feeling grateful for another gaming-free day.',
+    'Socialized with friends in person instead of online.',
   ];
 
   const relapseNotes = [
-    'Fell into old patterns. Need to refocus.',
-    'Stress got to me. Will try harder next time.',
-    'Social situation triggered cravings.',
-    'Feeling disappointed but not giving up.',
-    'Need to revisit my coping strategies.',
+    'Gamed for 6 hours. Lost track of time completely.',
+    'Started with "just one game" and couldn\'t stop.',
+    'Stressed about work and escaped into gaming.',
+    'Friends invited me to play. Couldn\'t say no.',
+    'Felt lonely and turned to gaming for comfort.',
+    'Bought a new game. Couldn\'t resist the urge.',
+    'Stayed up all night gaming. Feel terrible today.',
   ];
 
   const entries: string[] = [];
+  const relapseDates = ['2026-08-05', '2026-08-14', '2026-08-23', '2026-09-02', '2026-09-10'];
 
   for (let i = 0; i < totalDays; i++) {
     const date = new Date(startDate);
     date.setDate(date.getDate() + i);
     const dateStr = date.toISOString().split('T')[0];
+    const isRelapse = relapseDates.includes(dateStr);
+    const dayOfWeek = date.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-    const isRelapse = config.relapseDates.includes(dateStr);
+    let mood: number;
+    if (isRelapse) {
+      mood = Math.random() < 0.7 ? 1 : 2;
+    } else if (isWeekend) {
+      mood = Math.floor(Math.random() * 2) + 4;
+    } else {
+      mood = Math.floor(Math.random() * 3) + 3;
+    }
+
+    const feelingIdx = isRelapse
+      ? Math.floor(Math.random() * relapseNotes.length)
+      : Math.floor(Math.random() * feelings.length);
+    const feeling = isRelapse ? relapseNotes[feelingIdx] : feelings[feelingIdx];
+
+    entries.push(
+      `('entry_${addictionId}_${dateStr}', '${addictionId}', '${dateStr}', ${mood}, '${feeling.replace(/'/g, "''")}', ${isRelapse ? 1 : 0}, '${isRelapse ? relapseNotes[Math.floor(Math.random() * relapseNotes.length)].replace(/'/g, "''") : ''}', datetime('now'), datetime('now'))`
+    );
+  }
+
+  await database.execAsync(`
+    INSERT OR IGNORE INTO journal_entries (id, addiction_id, date, mood, feelings, is_relapse, relapse_notes, created_at, updated_at)
+    VALUES ${entries.join(',\n')};
+  `);
+
+  const activities = [
+    `('act_${addictionId}_0', '${addictionId}', 'Gym Workout', 45, 'Replaced gaming time with exercise', datetime('now'))`,
+    `('act_${addictionId}_1', '${addictionId}', 'Reading', 30, 'Reading a book about breaking habits', datetime('now'))`,
+    `('act_${addictionId}_2', '${addictionId}', 'Guitar Practice', 40, 'Learning to play songs I enjoy', datetime('now'))`,
+    `('act_${addictionId}_3', '${addictionId}', 'Nature Walk', 60, 'Walking in the park instead of gaming', datetime('now'))`,
+    `('act_${addictionId}_4', '${addictionId}', 'Cooking', 30, 'Trying new recipes to stay busy', datetime('now'))`,
+  ];
+
+  await database.execAsync(`
+    INSERT OR IGNORE INTO activities (id, addiction_id, name, duration_minutes, notes, created_at)
+    VALUES ${activities.join(',\n')};
+  `);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const schedules = [
+    { title: 'Morning Gym Session', time: '07:00', offset: 0 },
+    { title: 'Guitar Practice', time: '14:00', offset: 1 },
+    { title: 'Evening Walk', time: '18:00', offset: 2 },
+    { title: 'Reading Hour', time: '20:00', offset: 3 },
+  ];
+
+  const schedEntries = schedules.map(s => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + s.offset);
+    const dateStr = d.toISOString().split('T')[0];
+    return `('sched_${addictionId}_${s.offset}', '${addictionId}', '${s.title}', '', '${dateStr}', '${s.time}', 1, datetime('now'))`;
+  });
+
+  await database.execAsync(`
+    INSERT OR IGNORE INTO schedules (id, addiction_id, title, description, date, time, is_active, created_at)
+    VALUES ${schedEntries.join(',\n')};
+  `);
+
+  console.log(`[seeder] Gaming: ${entries.length} entries, 5 activities, 4 schedules`);
+}
+
+async function seedSmokingData(database: SQLite.SQLiteDatabase) {
+  const addictionId = 'addiction_smoking';
+
+  const startDate = new Date('2026-08-01');
+  const endDate = new Date('2026-09-12');
+  const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+  const feelings = [
+    'Breathing feels easier today. Lungs are healing.',
+    'Did deep breathing exercises when cravings hit.',
+    'Walked past the store without buying cigarettes.',
+    'Chewing gum helped with the oral fixation.',
+    'Drank water instead of smoking. Staying hydrated.',
+    'Feeling proud. Another smoke-free day.',
+    'Cravings were intense but I used my coping strategies.',
+    'Went for a run. Lungs are getting stronger.',
+    'Meditated to manage stress without smoking.',
+    'Smell of smoke still triggers me but I resisted.',
+    'Day 10 smoke-free. Starting to feel the benefits.',
+    'Had coffee without a cigarette. New routine.',
+    'Used the patch today. Managing withdrawal.',
+    'Feeling more energetic without smoking.',
+    'Cooked instead of smoking. Healthy distraction.',
+    'Went to a support group. Not alone in this.',
+    'Cravings hit hard after a meal but I pushed through.',
+    'Running is getting easier. Lungs are healing.',
+    'Feeling confident in my ability to quit.',
+    'One more day smoke-free. Progress!',
+  ];
+
+  const relapseNotes = [
+    'Had one cigarette after a stressful meeting.',
+    'Smoked when out with friends who smoke.',
+    'Bought a pack "for emergencies". Now smoking again.',
+    'Stress was too much. Relapsed after 5 days.',
+    'Social pressure got to me. Smoked at a party.',
+    'Thought "just one" but ended up smoking all day.',
+    'Coffee shop trigger. Smoked outside.',
+  ];
+
+  const entries: string[] = [];
+  const relapseDates = ['2026-08-09', '2026-08-21', '2026-09-03'];
+
+  for (let i = 0; i < totalDays; i++) {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + i);
+    const dateStr = date.toISOString().split('T')[0];
+    const isRelapse = relapseDates.includes(dateStr);
     const dayOfWeek = date.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
@@ -137,9 +226,13 @@ async function seedAddictionData(
     VALUES ${entries.join(',\n')};
   `);
 
-  const activities = config.activities.map((a, i) =>
-    `('act_${addictionId}_${i}', '${addictionId}', '${a.name}', ${a.duration}, '', datetime('now'))`
-  );
+  const activities = [
+    `('act_${addictionId}_0', '${addictionId}', 'Deep Breathing', 10, '4-7-8 breathing technique when cravings hit', datetime('now'))`,
+    `('act_${addictionId}_1', '${addictionId}', 'Morning Run', 30, 'Cardio helps reduce cravings', datetime('now'))`,
+    `('act_${addictionId}_2', '${addictionId}', 'Chewing Gum', 5, 'Sugar-free gum for oral fixation', datetime('now'))`,
+    `('act_${addictionId}_3', '${addictionId}', 'Meditation', 15, 'Mindfulness to manage stress', datetime('now'))`,
+    `('act_${addictionId}_4', '${addictionId}', 'Hydration', 5, 'Drinking water when cravings hit', datetime('now'))`,
+  ];
 
   await database.execAsync(`
     INSERT OR IGNORE INTO activities (id, addiction_id, name, duration_minutes, notes, created_at)
@@ -149,19 +242,26 @@ async function seedAddictionData(
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const schedules = config.schedules.map((s, i) => {
-    const schedDate = new Date(today);
-    schedDate.setDate(schedDate.getDate() + i);
-    const dateStr = schedDate.toISOString().split('T')[0];
-    return `('sched_${addictionId}_${i}', '${addictionId}', '${s.title}', '', '${dateStr}', '${s.time}', 1, datetime('now'))`;
+  const schedules = [
+    { title: 'Morning Run', time: '06:30', offset: 0 },
+    { title: 'Deep Breathing Break', time: '10:00', offset: 1 },
+    { title: 'Afternoon Walk', time: '14:00', offset: 2 },
+    { title: 'Evening Meditation', time: '19:00', offset: 3 },
+  ];
+
+  const schedEntries = schedules.map(s => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + s.offset);
+    const dateStr = d.toISOString().split('T')[0];
+    return `('sched_${addictionId}_${s.offset}', '${addictionId}', '${s.title}', '', '${dateStr}', '${s.time}', 1, datetime('now'))`;
   });
 
   await database.execAsync(`
     INSERT OR IGNORE INTO schedules (id, addiction_id, title, description, date, time, is_active, created_at)
-    VALUES ${schedules.join(',\n')};
+    VALUES ${schedEntries.join(',\n')};
   `);
 
-  console.log(`[seeder] Seeded ${entries.length} entries for ${addictionId}`);
+  console.log(`[seeder] Smoking: ${entries.length} entries, 5 activities, 4 schedules`);
 }
 
 export async function forceReseed(database: SQLite.SQLiteDatabase) {
