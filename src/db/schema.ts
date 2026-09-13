@@ -7,6 +7,7 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (db) return db;
   db = await SQLite.openDatabaseAsync('nonono.db');
   await initDatabase(db);
+  await migrateAddictionId(db);
   await seedTestData(db);
   return db;
 }
@@ -25,9 +26,18 @@ async function initDatabase(database: SQLite.SQLiteDatabase) {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS addictions (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      icon TEXT DEFAULT '🎯',
+      color TEXT DEFAULT '#3D8B8B',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS journal_entries (
       id TEXT PRIMARY KEY,
-      date TEXT NOT NULL UNIQUE,
+      addiction_id TEXT DEFAULT 'default',
+      date TEXT NOT NULL,
       mood INTEGER NOT NULL DEFAULT 3,
       feelings TEXT DEFAULT '',
       is_relapse INTEGER DEFAULT 0,
@@ -37,10 +47,42 @@ async function initDatabase(database: SQLite.SQLiteDatabase) {
     );
 
     CREATE INDEX IF NOT EXISTS idx_journal_date ON journal_entries(date);
+    CREATE INDEX IF NOT EXISTS idx_journal_addiction ON journal_entries(addiction_id);
   `);
 
   await migrateActivities(database);
   await migrateSchedules(database);
+}
+
+async function migrateAddictionId(database: SQLite.SQLiteDatabase) {
+  try {
+    const journalCols = await database.getAllAsync<{ name: string }>(
+      "PRAGMA table_info(journal_entries)"
+    );
+    if (!journalCols.some(c => c.name === 'addiction_id')) {
+      await database.execAsync(`ALTER TABLE journal_entries ADD COLUMN addiction_id TEXT DEFAULT 'default'`);
+      await database.execAsync(`UPDATE journal_entries SET addiction_id = 'default' WHERE addiction_id IS NULL`);
+      await database.execAsync(`CREATE INDEX IF NOT EXISTS idx_journal_addiction ON journal_entries(addiction_id)`);
+    }
+
+    const actCols = await database.getAllAsync<{ name: string }>(
+      "PRAGMA table_info(activities)"
+    );
+    if (!actCols.some(c => c.name === 'addiction_id')) {
+      await database.execAsync(`ALTER TABLE activities ADD COLUMN addiction_id TEXT DEFAULT 'default'`);
+      await database.execAsync(`UPDATE activities SET addiction_id = 'default' WHERE addiction_id IS NULL`);
+    }
+
+    const schedCols = await database.getAllAsync<{ name: string }>(
+      "PRAGMA table_info(schedules)"
+    );
+    if (!schedCols.some(c => c.name === 'addiction_id')) {
+      await database.execAsync(`ALTER TABLE schedules ADD COLUMN addiction_id TEXT DEFAULT 'default'`);
+      await database.execAsync(`UPDATE schedules SET addiction_id = 'default' WHERE addiction_id IS NULL`);
+    }
+  } catch (error) {
+    console.error('[schema] Migration error:', error);
+  }
 }
 
 async function migrateActivities(database: SQLite.SQLiteDatabase) {
@@ -52,6 +94,7 @@ async function migrateActivities(database: SQLite.SQLiteDatabase) {
     await database.execAsync(`
       CREATE TABLE activities (
         id TEXT PRIMARY KEY,
+        addiction_id TEXT DEFAULT 'default',
         name TEXT NOT NULL,
         duration_minutes INTEGER DEFAULT 0,
         notes TEXT DEFAULT '',
@@ -71,6 +114,7 @@ async function migrateActivities(database: SQLite.SQLiteDatabase) {
     await database.execAsync(`
       CREATE TABLE activities (
         id TEXT PRIMARY KEY,
+        addiction_id TEXT DEFAULT 'default',
         name TEXT NOT NULL,
         duration_minutes INTEGER DEFAULT 0,
         notes TEXT DEFAULT '',
@@ -90,6 +134,7 @@ async function migrateSchedules(database: SQLite.SQLiteDatabase) {
       await database.execAsync(`
         CREATE TABLE schedules (
           id TEXT PRIMARY KEY,
+          addiction_id TEXT DEFAULT 'default',
           title TEXT NOT NULL,
           description TEXT DEFAULT '',
           date TEXT NOT NULL,
@@ -112,6 +157,7 @@ async function migrateSchedules(database: SQLite.SQLiteDatabase) {
       await database.execAsync(`
         CREATE TABLE schedules (
           id TEXT PRIMARY KEY,
+          addiction_id TEXT DEFAULT 'default',
           title TEXT NOT NULL,
           description TEXT DEFAULT '',
           date TEXT NOT NULL,
@@ -128,6 +174,7 @@ async function migrateSchedules(database: SQLite.SQLiteDatabase) {
     await database.execAsync(`
       CREATE TABLE schedules (
         id TEXT PRIMARY KEY,
+        addiction_id TEXT DEFAULT 'default',
         title TEXT NOT NULL,
         description TEXT DEFAULT '',
         date TEXT NOT NULL,

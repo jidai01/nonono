@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { useScheduleStore } from '../../src/stores/scheduleStore';
+import { useAddictionStore } from '../../src/stores/addictionStore';
 import { getUniqueActivityNames } from '../../src/db/queries';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
@@ -32,6 +33,7 @@ function formatTimeDisplay(time: string): string {
 export default function NewScheduleScreen() {
   const router = useRouter();
   const { addSchedule } = useScheduleStore();
+  const { currentAddictionId } = useAddictionStore();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -68,6 +70,7 @@ export default function NewScheduleScreen() {
     }
 
     await addSchedule({
+      addiction_id: currentAddictionId || 'default',
       title: title.trim(),
       description: description.trim(),
       date: selectedDate,

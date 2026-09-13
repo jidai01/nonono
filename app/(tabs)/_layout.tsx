@@ -1,9 +1,18 @@
+import { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Shadows } from '../../src/types/theme';
+import { useAddictionStore } from '../../src/stores/addictionStore';
+import AddictionDropdown from './AddictionDropdown';
 
 export default function TabLayout() {
+  const { loadAddictions, ensureDefaultAddiction } = useAddictionStore();
+
+  useEffect(() => {
+    ensureDefaultAddiction().then(() => loadAddictions());
+  }, []);
+
   return (
     <Tabs
       screenOptions={{
@@ -32,6 +41,7 @@ export default function TabLayout() {
           fontSize: Typography.sizes.lg,
         },
         headerShadowVisible: false,
+        headerRight: () => <AddictionDropdown />,
       }}
     >
       <Tabs.Screen

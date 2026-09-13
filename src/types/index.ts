@@ -8,8 +8,17 @@ export interface Settings {
   created_at: string;
 }
 
+export interface Addiction {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  created_at: string;
+}
+
 export interface JournalEntry {
   id: string;
+  addiction_id: string;
   date: string;
   mood: number;
   feelings: string;
@@ -21,6 +30,7 @@ export interface JournalEntry {
 
 export interface Activity {
   id: string;
+  addiction_id: string;
   name: string;
   duration_minutes: number;
   notes: string;
@@ -29,6 +39,7 @@ export interface Activity {
 
 export interface Schedule {
   id: string;
+  addiction_id: string;
   title: string;
   description: string;
   date: string;
@@ -41,6 +52,7 @@ export interface ExportData {
   version: string;
   exported_at: string;
   settings: Omit<Settings, 'id'>;
+  addictions: Addiction[];
   journal_entries: JournalEntry[];
   activities: Activity[];
   schedules: Schedule[];
@@ -77,4 +89,17 @@ export const PREDEFINED_ACTIVITIES = [
   'Cooking',
   'Walking',
   'Yoga',
+];
+
+export const PREDEFINED_ADDICTIONS = [
+  { name: 'Gaming', icon: '🎮', color: '#6B5CE7' },
+  { name: 'Smoking', icon: '🚬', color: '#8B8B8B' },
+  { name: 'Alcohol', icon: '🍷', color: '#C45B5B' },
+  { name: 'Social Media', icon: '📱', color: '#4A90D9' },
+  { name: 'Gambling', icon: '🎰', color: '#D4A843' },
+  { name: 'Junk Food', icon: '🍔', color: '#E8917A' },
+  { name: 'Shopping', icon: '🛍️', color: '#D47A9E' },
+  { name: 'Caffeine', icon: '☕', color: '#8B6F47' },
+  { name: 'Pornography', icon: '🔞', color: '#9B59B6' },
+  { name: 'Drugs', icon: '💊', color: '#E74C3C' },
 ];

@@ -4,11 +4,13 @@ import { Calendar, DateData } from 'react-native-calendars';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useJournalStore } from '../../src/stores/journalStore';
+import { useAddictionStore } from '../../src/stores/addictionStore';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function CalendarScreen() {
   const router = useRouter();
   const { entries, loadEntriesByMonth, loadEntryByDate, getSoberDays, getRelapseDays, getTotalEntries, getCurrentStreak, getLongestStreak } = useJournalStore();
+  const { currentAddictionId } = useAddictionStore();
   const [selectedDate, setSelectedDate] = useState('');
   const [stats, setStats] = useState({
     soberDays: 0,
@@ -20,18 +22,26 @@ export default function CalendarScreen() {
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
 
   useEffect(() => {
-    loadStats();
+    if (currentAddictionId) {
+      loadData();
+    }
+  }, [currentAddictionId]);
+
+  const loadData = async () => {
+    if (!currentAddictionId) return;
     const now = new Date();
-    loadEntriesByMonth(now.getFullYear(), now.getMonth() + 1);
-  }, []);
+    await loadEntriesByMonth(now.getFullYear(), now.getMonth() + 1, currentAddictionId);
+    await loadStats();
+  };
 
   const loadStats = async () => {
+    if (!currentAddictionId) return;
     const [soberDays, relapseDays, totalEntries, currentStreak, longestStreak] = await Promise.all([
-      getSoberDays(),
-      getRelapseDays(),
-      getTotalEntries(),
-      getCurrentStreak(),
-      getLongestStreak(),
+      getSoberDays(currentAddictionId),
+      getRelapseDays(currentAddictionId),
+      getTotalEntries(currentAddictionId),
+      getCurrentStreak(currentAddictionId),
+      getLongestStreak(currentAddictionId),
     ]);
     setStats({ soberDays, relapseDays, totalEntries, currentStreak, longestStreak });
   };
@@ -48,13 +58,17 @@ export default function CalendarScreen() {
 
   const handleDayPress = useCallback(async (day: DateData) => {
     setSelectedDate(day.dateString);
-    const entry = await loadEntryByDate(day.dateString);
-    setSelectedEntry(entry);
-  }, []);
+    if (currentAddictionId) {
+      const entry = await loadEntryByDate(day.dateString, currentAddictionId);
+      setSelectedEntry(entry);
+    }
+  }, [currentAddictionId]);
 
   const handleMonthChange = useCallback((month: DateData) => {
-    loadEntriesByMonth(month.year, month.month);
-  }, []);
+    if (currentAddictionId) {
+      loadEntriesByMonth(month.year, month.month, currentAddictionId);
+    }
+  }, [currentAddictionId]);
 
   const handleAddEntry = () => {
     router.push(`/entry/new?date=${selectedDate || new Date().toISOString().split('T')[0]}`);

@@ -196,8 +196,11 @@ export default function SettingsScreen() {
           const activities = await getAllActivities();
           const schedules = await getAllSchedules();
 
+          const { getAllAddictions } = await import('../../src/db/queries');
+          const addictions = await getAllAddictions();
+
           const exportData: ExportData = {
-            version: '1.0.0',
+            version: '2.0.0',
             exported_at: new Date().toISOString(),
             settings: {
               password_hash: settings?.password_hash || '',
@@ -206,6 +209,7 @@ export default function SettingsScreen() {
               biometric_enabled: settings?.biometric_enabled || false,
               created_at: settings?.created_at || '',
             },
+            addictions: addictions,
             journal_entries: entries,
             activities: activities,
             schedules: schedules,

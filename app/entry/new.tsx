@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView 
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useJournalStore } from '../../src/stores/journalStore';
+import { useAddictionStore } from '../../src/stores/addictionStore';
 import { MoodLevel, MOOD_LABELS, MOOD_EMOJIS } from '../../src/types';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
@@ -10,6 +11,7 @@ export default function NewEntryScreen() {
   const router = useRouter();
   const { date } = useLocalSearchParams<{ date: string }>();
   const { loadEntryByDate, saveEntry, currentEntry } = useJournalStore();
+  const { currentAddictionId } = useAddictionStore();
   
   const [mood, setMood] = useState<MoodLevel>(3);
   const [feelings, setFeelings] = useState('');
@@ -20,8 +22,10 @@ export default function NewEntryScreen() {
   const entryDate = date || new Date().toISOString().split('T')[0];
 
   useEffect(() => {
-    loadEntryByDate(entryDate);
-  }, [entryDate]);
+    if (currentAddictionId) {
+      loadEntryByDate(entryDate, currentAddictionId);
+    }
+  }, [entryDate, currentAddictionId]);
 
   useEffect(() => {
     if (currentEntry) {
@@ -37,9 +41,10 @@ export default function NewEntryScreen() {
     setIsSaving(true);
 
     try {
-      const entryId = currentEntry?.id || entryDate;
+      const entryId = currentEntry?.id || `${currentAddictionId}_${entryDate}`;
       await saveEntry({
         id: entryId,
+        addiction_id: currentAddictionId || 'default',
         date: entryDate,
         mood,
         feelings,

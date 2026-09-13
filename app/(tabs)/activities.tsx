@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useJournalStore } from '../../src/stores/journalStore';
+import { useAddictionStore } from '../../src/stores/addictionStore';
 import { PREDEFINED_ACTIVITIES, Activity } from '../../src/types';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function ActivitiesScreen() {
   const { activities, loadActivities, addActivity, updateActivity, deleteActivity } = useJournalStore();
+  const { currentAddictionId } = useAddictionStore();
   const [showModal, setShowModal] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [activityName, setActivityName] = useState('');
@@ -15,8 +17,10 @@ export default function ActivitiesScreen() {
   const [selectedPredefined, setSelectedPredefined] = useState<string | null>(null);
 
   useEffect(() => {
-    loadActivities();
-  }, []);
+    if (currentAddictionId) {
+      loadActivities(currentAddictionId);
+    }
+  }, [currentAddictionId]);
 
   const openAddModal = () => {
     setEditingActivity(null);
@@ -53,10 +57,15 @@ export default function ActivitiesScreen() {
       });
     } else {
       await addActivity({
+        addiction_id: currentAddictionId || 'default',
         name,
         duration_minutes: parseInt(duration) || 0,
         notes,
       });
+    }
+
+    if (currentAddictionId) {
+      await loadActivities(currentAddictionId);
     }
 
     setShowModal(false);
@@ -73,7 +82,16 @@ export default function ActivitiesScreen() {
       'Are you sure you want to delete this activity?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => deleteActivity(id) },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteActivity(id);
+            if (currentAddictionId) {
+              await loadActivities(currentAddictionId);
+            }
+          },
+        },
       ]
     );
   };

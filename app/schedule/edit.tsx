@@ -16,6 +16,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { useScheduleStore } from '../../src/stores/scheduleStore';
+import { useAddictionStore } from '../../src/stores/addictionStore';
 import { getUniqueActivityNames } from '../../src/db/queries';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
@@ -33,6 +34,7 @@ export default function EditScheduleScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { schedules, loadSchedules, updateSchedule, deleteSchedule } = useScheduleStore();
+  const { currentAddictionId } = useAddictionStore();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

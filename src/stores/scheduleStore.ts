@@ -7,8 +7,8 @@ import { scheduleDateNotification, cancelNotification } from '../utils/notificat
 interface ScheduleState {
   schedules: Schedule[];
   loading: boolean;
-  loadSchedules: () => Promise<void>;
-  loadSchedulesByDate: (date: string) => Promise<void>;
+  loadSchedules: (addictionId: string) => Promise<void>;
+  loadSchedulesByDate: (date: string, addictionId: string) => Promise<void>;
   addSchedule: (schedule: Omit<Schedule, 'id' | 'created_at'>) => Promise<void>;
   updateSchedule: (schedule: Schedule) => Promise<void>;
   toggleSchedule: (id: string, isActive: boolean) => Promise<void>;
@@ -19,15 +19,15 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
   schedules: [],
   loading: false,
 
-  loadSchedules: async () => {
+  loadSchedules: async (addictionId) => {
     set({ loading: true });
-    const schedules = await db.getAllSchedules();
+    const schedules = await db.getAllSchedules(addictionId);
     set({ schedules, loading: false });
   },
 
-  loadSchedulesByDate: async (date: string) => {
+  loadSchedulesByDate: async (date, addictionId) => {
     set({ loading: true });
-    const schedules = await db.getSchedulesByDate(date);
+    const schedules = await db.getSchedulesByDate(date, addictionId);
     set({ schedules, loading: false });
   },
 
@@ -44,9 +44,6 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
         `schedule_${id}`
       );
     }
-
-    const schedules = await db.getAllSchedules();
-    set({ schedules });
   },
 
   updateSchedule: async (schedule) => {
@@ -63,13 +60,10 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
     } else {
       await cancelNotification(`schedule_${schedule.id}`);
     }
-
-    const schedules = await db.getAllSchedules();
-    set({ schedules });
   },
 
   toggleSchedule: async (id, isActive) => {
-    const schedule = useScheduleStore.getState().schedules.find(s => s.id === id);
+    const schedule = (await db.getAllSchedules()).find(s => s.id === id);
     if (schedule) {
       await db.upsertSchedule({ ...schedule, is_active: isActive });
 
@@ -84,16 +78,11 @@ export const useScheduleStore = create<ScheduleState>((set) => ({
       } else {
         await cancelNotification(`schedule_${id}`);
       }
-
-      const schedules = await db.getAllSchedules();
-      set({ schedules });
     }
   },
 
   deleteSchedule: async (id) => {
     await db.deleteSchedule(id);
     await cancelNotification(`schedule_${id}`);
-    const schedules = await db.getAllSchedules();
-    set({ schedules });
   },
 }));

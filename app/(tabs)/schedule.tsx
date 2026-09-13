@@ -4,18 +4,22 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar, DateData } from 'react-native-calendars';
 import { useScheduleStore } from '../../src/stores/scheduleStore';
+import { useAddictionStore } from '../../src/stores/addictionStore';
 import { Schedule } from '../../src/types';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function ScheduleScreen() {
   const router = useRouter();
   const { schedules, loadSchedules, toggleSchedule, deleteSchedule } = useScheduleStore();
+  const { currentAddictionId } = useAddictionStore();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
-    loadSchedules();
-  }, []);
+    if (currentAddictionId) {
+      loadSchedules(currentAddictionId);
+    }
+  }, [currentAddictionId]);
 
   const filteredSchedules = schedules.filter(s => s.date === selectedDate);
 
@@ -35,13 +39,28 @@ export default function ScheduleScreen() {
       'Are you sure you want to delete this schedule?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => deleteSchedule(id) },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteSchedule(id);
+            if (currentAddictionId) {
+              await loadSchedules(currentAddictionId);
+            }
+          },
+        },
       ]
     );
   };
 
+  const handleToggle = async (id: string, value: boolean) => {
+    await toggleSchedule(id, value);
+    if (currentAddictionId) {
+      await loadSchedules(currentAddictionId);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr + 'T00:00:00');
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const selected = new Date(dateStr + 'T00:00:00');
@@ -53,7 +72,7 @@ export default function ScheduleScreen() {
     if (diffDays === 1) return 'Tomorrow';
     if (diffDays === -1) return 'Yesterday';
 
-    return date.toLocaleDateString('en-US', {
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -76,7 +95,7 @@ export default function ScheduleScreen() {
         </View>
         <Switch
           value={item.is_active}
-          onValueChange={(value) => toggleSchedule(item.id, value)}
+          onValueChange={(value) => handleToggle(item.id, value)}
           trackColor={{ false: Colors.border, true: Colors.primary + '50' }}
           thumbColor={item.is_active ? Colors.primary : Colors.textTertiary}
         />
