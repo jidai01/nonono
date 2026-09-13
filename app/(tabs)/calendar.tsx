@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useJournalStore } from '../../src/stores/journalStore';
 import { useAddictionStore } from '../../src/stores/addictionStore';
 import { Schedule } from '../../src/types';
-import { getSchedulesByDate } from '../../src/db/queries';
+import { getSchedulesByDate, getAllSchedules } from '../../src/db/queries';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function CalendarScreen() {
@@ -23,6 +23,7 @@ export default function CalendarScreen() {
   });
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [selectedSchedules, setSelectedSchedules] = useState<Schedule[]>([]);
+  const [monthSchedules, setMonthSchedules] = useState<Schedule[]>([]);
 
   useEffect(() => {
     if (currentAddictionId) {
@@ -34,7 +35,18 @@ export default function CalendarScreen() {
     if (!currentAddictionId) return;
     const now = new Date();
     await loadEntriesByMonth(now.getFullYear(), now.getMonth() + 1, currentAddictionId);
+    await loadMonthSchedules(now.getFullYear(), now.getMonth() + 1);
     await loadStats();
+  };
+
+  const loadMonthSchedules = async (year: number, month: number) => {
+    if (!currentAddictionId) return;
+    const schedules = await getAllSchedules(currentAddictionId);
+    const filtered = schedules.filter(s => {
+      const d = new Date(s.date);
+      return d.getFullYear() === year && d.getMonth() + 1 === month;
+    });
+    setMonthSchedules(filtered);
   };
 
   const loadStats = async () => {
@@ -59,6 +71,19 @@ export default function CalendarScreen() {
     return acc;
   }, {} as Record<string, any>);
 
+  // Add schedule dots to calendar
+  const markedWithSchedules = monthSchedules.reduce((acc, schedule) => {
+    if (!acc[schedule.date]) {
+      acc[schedule.date] = {
+        marked: true,
+        dotColor: Colors.primary,
+        selected: schedule.date === selectedDate,
+        selectedColor: Colors.primary,
+      };
+    }
+    return acc;
+  }, markedDates);
+
   const handleDayPress = useCallback(async (day: DateData) => {
     setSelectedDate(day.dateString);
     if (currentAddictionId) {
@@ -72,6 +97,7 @@ export default function CalendarScreen() {
   const handleMonthChange = useCallback((month: DateData) => {
     if (currentAddictionId) {
       loadEntriesByMonth(month.year, month.month, currentAddictionId);
+      loadMonthSchedules(month.year, month.month);
     }
   }, [currentAddictionId]);
 
@@ -129,7 +155,7 @@ export default function CalendarScreen() {
       {/* Calendar */}
       <View style={styles.calendarContainer}>
         <Calendar
-          markedDates={markedDates}
+          markedDates={markedWithSchedules}
           onDayPress={handleDayPress}
           onMonthChange={handleMonthChange}
           theme={{
@@ -360,10 +386,60 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },
+  schedulesContainer: {
+    marginBottom: Spacing.md,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  sectionHeaderText: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textSecondary,
+  },
+  scheduleItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  scheduleTimeContainer: {
+    backgroundColor: Colors.primary + '15',
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    marginRight: Spacing.md,
+  },
+  scheduleTime: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.primary,
+  },
+  scheduleInfo: {
+    flex: 1,
+  },
+  scheduleTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.medium,
+    color: Colors.textPrimary,
+  },
+  scheduleDescription: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textTertiary,
+    marginTop: 2,
+  },
   entryPreview: {
     backgroundColor: Colors.background,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
+  },
+  entryPreviewContent: {
+    marginTop: Spacing.sm,
   },
   entryPreviewHeader: {
     flexDirection: 'row',
