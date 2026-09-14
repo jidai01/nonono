@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   version:
-    name: Update Version & Build
+    name: Update Version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -79,7 +79,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+
+      - name: Remove old Node.js
+        run: |
+          sudo rm -rf /usr/local/lib/node_modules
+          sudo rm -f /usr/local/bin/node
+          sudo rm -f /usr/local/bin/npm
+          sudo rm -f /usr/local/bin/npx
+
+      - name: Verify Node.js 20
+        run: |
+          node --version
+          which node
 
       - name: Setup Java JDK 17
         uses: actions/setup-java@v4
