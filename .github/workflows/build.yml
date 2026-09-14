@@ -1,0 +1,102 @@
+name: Build and Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Expo CLI
+        run: npm install -g eas-cli expo-cli
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Expo login
+        run: eas login
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Configure EAS
+        run: eas build:configure
+
+      - name: Build APK (Preview)
+        run: eas build -p android --profile preview --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Get build artifact URL
+        id: build-info
+        run: |
+          BUILD_INFO=$(eas build:list --platform android --limit 1 --json)
+          echo "build_url=$(echo $BUILD_INFO | jq -r '.[0].artifacts.buildUrl')" >> $GITHUB_OUTPUT
+          echo "build_id=$(echo $BUILD_INFO | jq -r '.[0].id')" >> $GITHUB_OUTPUT
+
+      - name: Download APK
+        run: |
+          curl -L -o nonono.apk "${{ steps.build-info.outputs.build_url }}"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "nonono v${{ github.event.inputs.version || github.ref_name }}"
+          body: |
+            ## Changes
+            
+            See [CHANGELOG.md](CHANGELOG.md) for details.
+            
+            ## Installation
+            
+            1. Download `nonono.apk` below
+            2. Enable "Install from unknown sources" on your Android device
+            3. Open the APK file to install
+          files: nonono.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-readme:
+    name: Update Version Badge
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update version in README
+        run: |
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          sed -i "s/version-.*-/version-${VERSION}-/" README.md
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add README.md
+          git commit -m "chore: update version to ${{ github.event.inputs.version || github.ref_name }}" || true
+          git push

@@ -10,7 +10,6 @@ import { encryptData, decryptData } from '../../src/utils/crypto';
 import { getAllEntries, getAllActivities, getAllSchedules } from '../../src/db/queries';
 import { updateBiometricSetting, updateDeviceLockSetting } from '../../src/utils/auth';
 import { getDatabase } from '../../src/db/schema';
-import { forceReseed } from '../../src/db/seeder';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
 
 export default function SettingsScreen() {
@@ -253,46 +252,41 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleReseed = () => {
-    Alert.alert(
-      'Reset Test Data',
-      'This will delete all data and reload test data (Aug 1 - Sep 12, 2026). Continue?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const database = await getDatabase();
-              await forceReseed(database);
-              Alert.alert('Done', 'Test data has been reloaded.');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to reseed data');
-            }
-          },
-        },
-      ]
-    );
-  };
-
   const handleWipeAllData = () => {
     Alert.alert(
-      'Wipe All Data',
-      'This will permanently delete ALL your data including journal entries, activities, schedules, and addictions. This cannot be undone!',
+      '⚠️ Wipe All Data',
+      'This will permanently delete ALL your data:\n\n• Journal entries\n• Activities\n• Schedules\n• Addictions\n• Settings\n\nThis action CANNOT be undone!',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Wipe Everything',
+          text: 'I understand, continue',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              const { resetAllData } = await import('../../src/utils/auth');
-              await resetAllData();
-              Alert.alert('Done', 'All data has been deleted. The app will restart.');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to wipe data');
-            }
+          onPress: () => {
+            // Second confirmation
+            Alert.alert(
+              '🚨 Final Confirmation',
+              'Are you absolutely sure you want to delete everything?\n\nType "DELETE" in your mind and press the button.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'DELETE EVERYTHING',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      const { resetAllData } = await import('../../src/utils/auth');
+                      await resetAllData();
+                      Alert.alert(
+                        'Data Deleted',
+                        'All data has been permanently deleted.',
+                        [{ text: 'OK' }]
+                      );
+                    } catch (error) {
+                      Alert.alert('Error', 'Failed to wipe data');
+                    }
+                  },
+                },
+              ]
+            );
           },
         },
       ]
@@ -585,21 +579,6 @@ export default function SettingsScreen() {
               <Text style={styles.settingLabel}>Import Data</Text>
               <Text style={styles.settingDescription}>
                 Import data from a previous backup
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          <TouchableOpacity style={styles.settingRow} onPress={handleReseed}>
-            <View style={[styles.settingIconContainer, { backgroundColor: Colors.warning + '15' }]}>
-              <Ionicons name="refresh" size={20} color={Colors.warning} />
-            </View>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Reset Test Data</Text>
-              <Text style={styles.settingDescription}>
-                Reload sample data for testing
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />

@@ -8,6 +8,11 @@
     "scheme": "nonono",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#3D8B8B"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.nonono.app",
@@ -17,10 +22,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#F4F7F6",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#3D8B8B"
       },
       "package": "com.nonono.app",
       "permissions": [
@@ -39,15 +42,6 @@
       "expo-router",
       "expo-sqlite",
       "expo-secure-store",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#3D8B8B"
-        }
-      ],
       [
         "expo-local-authentication",
         {
