@@ -21,10 +21,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Setup Java JDK 17
@@ -65,7 +65,6 @@ jobs:
             
             ### What's New
             - Bug fixes and improvements
-            - See [CHANGELOG.md](CHANGELOG.md) for details
             
             ### Installation
             1. Download `nonono.apk` below
