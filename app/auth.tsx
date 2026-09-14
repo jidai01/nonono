@@ -110,7 +110,7 @@ export default function AuthScreen() {
   };
 
   const handleRecoveryCodeDone = () => {
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/calendar');
   };
 
   if (showRecoveryCode) {

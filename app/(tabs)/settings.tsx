@@ -178,10 +178,15 @@ export default function SettingsScreen() {
 
   const handleExport = async () => {
     if (Platform.OS !== 'web') {
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Storage permission is needed to export data.');
-        return;
+      try {
+        const MediaLibrary = await import('expo-media-library');
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Required', 'Storage permission is needed to export data.');
+          return;
+        }
+      } catch (e) {
+        console.log('MediaLibrary not available');
       }
     }
 
@@ -271,6 +276,29 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleWipeAllData = () => {
+    Alert.alert(
+      'Wipe All Data',
+      'This will permanently delete ALL your data including journal entries, activities, schedules, and addictions. This cannot be undone!',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Wipe Everything',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { resetAllData } = await import('../../src/utils/auth');
+              await resetAllData();
+              Alert.alert('Done', 'All data has been deleted. The app will restart.');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to wipe data');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleImport = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -295,9 +323,75 @@ export default function SettingsScreen() {
               return;
             }
 
+            const database = await getDatabase();
+
+            // Clear existing data
+            await database.execAsync('DELETE FROM journal_entries');
+            await database.execAsync('DELETE FROM activities');
+            await database.execAsync('DELETE FROM schedules');
+            await database.execAsync('DELETE FROM addictions');
+
+            // Import addictions
+            if (decrypted.addictions && decrypted.addictions.length > 0) {
+              const addictions = decrypted.addictions.map(a =>
+                `('${a.id}', '${a.name.replace(/'/g, "''")}', '${a.icon}', '${a.color}', '${a.created_at}')`
+              ).join(',\n');
+              await database.execAsync(`
+                INSERT OR IGNORE INTO addictions (id, name, icon, color, created_at)
+                VALUES ${addictions};
+              `);
+            }
+
+            // Import journal entries
+            if (decrypted.journal_entries && decrypted.journal_entries.length > 0) {
+              const entries = decrypted.journal_entries.map(e =>
+                `('${e.id}', '${e.addiction_id}', '${e.date}', ${e.mood}, '${e.feelings.replace(/'/g, "''")}', ${e.is_relapse ? 1 : 0}, '${e.relapse_notes.replace(/'/g, "''")}', '${e.created_at}', '${e.updated_at}')`
+              ).join(',\n');
+              await database.execAsync(`
+                INSERT OR IGNORE INTO journal_entries (id, addiction_id, date, mood, feelings, is_relapse, relapse_notes, created_at, updated_at)
+                VALUES ${entries};
+              `);
+            }
+
+            // Import activities
+            if (decrypted.activities && decrypted.activities.length > 0) {
+              const activities = decrypted.activities.map(a =>
+                `('${a.id}', '${a.addiction_id}', '${a.name.replace(/'/g, "''")}', ${a.duration_minutes}, '${a.notes.replace(/'/g, "''")}', '${a.created_at}')`
+              ).join(',\n');
+              await database.execAsync(`
+                INSERT OR IGNORE INTO activities (id, addiction_id, name, duration_minutes, notes, created_at)
+                VALUES ${activities};
+              `);
+            }
+
+            // Import schedules
+            if (decrypted.schedules && decrypted.schedules.length > 0) {
+              const schedules = decrypted.schedules.map(s =>
+                `('${s.id}', '${s.addiction_id}', '${s.title.replace(/'/g, "''")}', '${s.description.replace(/'/g, "''")}', '${s.date}', '${s.time}', ${s.is_active ? 1 : 0}, '${s.created_at}')`
+              ).join(',\n');
+              await database.execAsync(`
+                INSERT OR IGNORE INTO schedules (id, addiction_id, title, description, date, time, is_active, created_at)
+                VALUES ${schedules};
+              `);
+            }
+
+            // Import settings if available
+            if (decrypted.settings) {
+              const { saveSettings } = await import('../../src/db/queries');
+              await saveSettings({
+                id: 1,
+                password_hash: decrypted.settings.password_hash || '',
+                salt: decrypted.settings.salt || '',
+                recovery_code_hash: decrypted.settings.recovery_code_hash || '',
+                biometric_enabled: decrypted.settings.biometric_enabled || false,
+                device_lock_enabled: false,
+                created_at: decrypted.settings.created_at || new Date().toISOString(),
+              });
+            }
+
             Alert.alert(
               'Import Successful',
-              'Data will be imported. The app will restart.',
+              'Data has been imported successfully. The app will restart.',
               [{ text: 'OK' }]
             );
           } catch (error) {
@@ -506,6 +600,21 @@ export default function SettingsScreen() {
               <Text style={styles.settingLabel}>Reset Test Data</Text>
               <Text style={styles.settingDescription}>
                 Reload sample data for testing
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+
+          <TouchableOpacity style={styles.settingRow} onPress={handleWipeAllData}>
+            <View style={[styles.settingIconContainer, { backgroundColor: Colors.error + '15' }]}>
+              <Ionicons name="trash" size={20} color={Colors.error} />
+            </View>
+            <View style={styles.settingInfo}>
+              <Text style={[styles.settingLabel, { color: Colors.error }]}>Wipe All Data</Text>
+              <Text style={styles.settingDescription}>
+                Delete all data permanently
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />

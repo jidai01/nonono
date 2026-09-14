@@ -36,8 +36,6 @@ function getDefaultSettings(): Settings {
     salt: '',
     recovery_code_hash: '',
     biometric_enabled: false,
-    pattern_hash: '',
-    pattern_salt: '',
     device_lock_enabled: false,
     created_at: new Date().toISOString(),
   };
@@ -134,13 +132,12 @@ export async function clearPassword(): Promise<void> {
 }
 
 export async function resetAllData(): Promise<void> {
-  const { deleteEntry, deleteSchedule } = require('../db/queries');
   const { getDatabase } = require('../db/schema');
-
   const db = await getDatabase();
   await db.execAsync(`
     DELETE FROM activities;
     DELETE FROM journal_entries;
     DELETE FROM schedules;
+    DELETE FROM addictions;
   `);
 }

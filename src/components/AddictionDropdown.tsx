@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAddictionStore } from '../../src/stores/addictionStore';
-import { Addiction, PREDEFINED_ADDICTIONS } from '../../src/types';
-import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../src/types/theme';
+import { useAddictionStore } from '../stores/addictionStore';
+import { Addiction, PREDEFINED_ADDICTIONS } from '../types';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../types/theme';
 
 export default function AddictionDropdown() {
   const { addictions, currentAddictionId, setCurrentAddiction, addAddiction, updateAddiction, deleteAddiction } = useAddictionStore();

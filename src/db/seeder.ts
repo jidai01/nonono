@@ -3,20 +3,17 @@ import * as SQLite from 'expo-sqlite';
 export async function seedTestData(database: SQLite.SQLiteDatabase) {
   try {
     const existing = await database.getFirstAsync<{ count: number }>(
-      'SELECT COUNT(*) as count FROM journal_entries'
+      'SELECT COUNT(*) as count FROM addictions'
     );
 
-    console.log(`[seeder] Existing entries: ${existing?.count || 0}`);
+    console.log(`[seeder] Existing addictions: ${existing?.count || 0}`);
 
     if (existing && existing.count > 0) {
-      console.log('[seeder] Clearing existing data...');
-      await database.execAsync('DELETE FROM journal_entries');
-      await database.execAsync('DELETE FROM activities');
-      await database.execAsync('DELETE FROM schedules');
-      await database.execAsync('DELETE FROM addictions');
+      console.log('[seeder] Database already has data, skipping seed');
+      return;
     }
 
-    console.log('[seeder] Starting seed for Aug 1 - Sep 12, 2026...');
+    console.log('[seeder] Empty database, seeding test data...');
 
     const addictions = [
       "('addiction_gaming', 'Gaming', '🎮', '#6B5CE7')",

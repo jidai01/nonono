@@ -6,18 +6,23 @@ import { Colors } from '../src/types/theme';
 
 export default function IndexScreen() {
   const router = useRouter();
-  const { isAuthenticated, loading } = useAuthStore();
+  const { isAuthenticated, hasPassword, loading } = useAuthStore();
 
   useEffect(() => {
     if (loading) return;
 
     const timer = setTimeout(() => {
-      // Always go to tabs - auth is optional
-      router.replace('/(tabs)/calendar');
+      if (hasPassword && !isAuthenticated) {
+        // Password is set but not authenticated - show auth screen
+        router.replace('/auth');
+      } else {
+        // No password or already authenticated - go to tabs
+        router.replace('/(tabs)/calendar');
+      }
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [loading]);
+  }, [loading, isAuthenticated, hasPassword]);
 
   return (
     <View style={styles.container}>
