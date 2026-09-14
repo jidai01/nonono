@@ -1,9 +1,54 @@
 import { Platform, Alert } from 'react-native';
 import { formatTime } from './date';
 
+let Notifications: any = null;
+let notificationsAvailable: boolean | null = null;
+
+async function getNotificationsModule() {
+  if (notificationsAvailable !== null) return Notifications;
+  
+  try {
+    Notifications = require('expo-notifications');
+    // Test if it actually works by checking if we can set handler
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+    notificationsAvailable = true;
+    return Notifications;
+  } catch (error) {
+    notificationsAvailable = false;
+    return null;
+  }
+}
+
 export async function requestNotificationPermissions(): Promise<boolean> {
-  // Notifications not available in Expo Go SDK 53+
-  return false;
+  if (Platform.OS === 'web') {
+    return false;
+  }
+
+  const module = await getNotificationsModule();
+  if (!module) {
+    return false;
+  }
+
+  try {
+    const { status: existingStatus } = await module.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    
+    if (existingStatus !== 'granted') {
+      const { status } = await module.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    
+    return finalStatus === 'granted';
+  } catch (error) {
+    console.warn('Notification permissions not available');
+    return false;
+  }
 }
 
 export async function scheduleNotification(
@@ -12,9 +57,30 @@ export async function scheduleNotification(
   date: Date,
   notificationId?: string
 ): Promise<string | null> {
-  // In Expo Go, we can only show immediate alerts
-  // Scheduled notifications require development build
-  return null;
+  const module = await getNotificationsModule();
+  if (!module) {
+    // Fallback to Alert
+    Alert.alert(title, body, [{ text: 'OK' }]);
+    return null;
+  }
+
+  try {
+    const id = await module.scheduleNotificationAsync({
+      content: {
+        title,
+        body,
+        sound: true,
+      },
+      trigger: {
+        date,
+      },
+    });
+    return id;
+  } catch (error) {
+    // Fallback to Alert
+    Alert.alert(title, body, [{ text: 'OK' }]);
+    return null;
+  }
 }
 
 export async function scheduleDateNotification(
@@ -42,37 +108,80 @@ export async function scheduleDateNotification(
     // Schedule is in the past, show immediate reminder
     Alert.alert(
       title,
-      `${body}\n\nDate: ${displayDate}\nTime: ${formatTime(time)}\n\n⚠️ This schedule has already passed.`,
+      `${body}\n\nDate: ${displayDate}\nTime: ${formatTime(time)}\n\nThis schedule has already passed.`,
       [{ text: 'OK' }]
     );
-  } else {
-    // Calculate time until notification
+    return null;
+  }
+
+  const module = await getNotificationsModule();
+  if (!module) {
+    // Fallback to Alert with timing info
     const timeUntil = triggerDate.getTime() - now.getTime();
     const hoursUntil = Math.floor(timeUntil / (1000 * 60 * 60));
     const minutesUntil = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+    const timeMessage = hoursUntil > 0 ? `${hoursUntil}h ${minutesUntil}m` : `${minutesUntil}m`;
 
-    let timeMessage = '';
-    if (hoursUntil > 0) {
-      timeMessage = `${hoursUntil}h ${minutesUntil}m`;
-    } else {
-      timeMessage = `${minutesUntil}m`;
-    }
-
-    // Show confirmation that schedule was set
     Alert.alert(
-      'Schedule Set ✓',
-      `${title}\n\n📅 ${displayDate}\n⏰ ${formatTime(time)}\n\n🔔 Reminder in ${timeMessage}\n\nNote: Real notifications require a development build.`,
+      'Schedule Set',
+      `${title}\n\n${displayDate} at ${formatTime(time)}\n\nReminder in ${timeMessage}`,
       [{ text: 'OK' }]
     );
+    return null;
   }
 
-  return null;
+  try {
+    const id = await module.scheduleNotificationAsync({
+      content: {
+        title,
+        body: `${body}\n\n${displayDate} at ${formatTime(time)}`,
+        sound: true,
+      },
+      trigger: {
+        date: triggerDate,
+      },
+    });
+    return id;
+  } catch (error) {
+    // Fallback to Alert
+    Alert.alert(
+      'Schedule Set',
+      `${title}\n\n${displayDate} at ${formatTime(time)}`,
+      [{ text: 'OK' }]
+    );
+    return null;
+  }
 }
 
-export async function cancelNotification(notificationId: string): Promise<void> {}
+export async function cancelNotification(notificationId: string): Promise<void> {
+  const module = await getNotificationsModule();
+  if (!module) return;
 
-export async function cancelAllNotifications(): Promise<void> {}
+  try {
+    await module.cancelScheduledNotificationAsync(notificationId);
+  } catch (error) {
+    console.warn('Failed to cancel notification');
+  }
+}
+
+export async function cancelAllNotifications(): Promise<void> {
+  const module = await getNotificationsModule();
+  if (!module) return;
+
+  try {
+    await module.cancelAllScheduledNotificationsAsync();
+  } catch (error) {
+    console.warn('Failed to cancel all notifications');
+  }
+}
 
 export async function getAllScheduledNotifications(): Promise<any[]> {
-  return [];
+  const module = await getNotificationsModule();
+  if (!module) return [];
+
+  try {
+    return await module.getAllScheduledNotificationsAsync();
+  } catch (error) {
+    return [];
+  }
 }
