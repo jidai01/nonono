@@ -1,32 +1,52 @@
 import { Platform, Alert } from 'react-native';
+import Constants from 'expo-constants';
 import { formatTime } from './date';
 
-let Notifications: any = null;
-let notificationsAvailable: boolean | null = null;
+function isExpoGo(): boolean {
+  return Constants.executionEnvironment === 'storeClient';
+}
+
+let notificationsModule: any = null;
+let moduleChecked = false;
 
 async function getNotificationsModule() {
-  if (notificationsAvailable !== null) return Notifications;
+  if (moduleChecked) return notificationsModule;
   
+  // Skip if in Expo Go - expo-notifications removed in SDK 53
+  if (isExpoGo()) {
+    moduleChecked = true;
+    return null;
+  }
+
   try {
-    Notifications = require('expo-notifications');
-    // Test if it actually works by checking if we can set handler
-    Notifications.setNotificationHandler({
+    notificationsModule = require('expo-notifications');
+    notificationsModule.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
       }),
     });
-    notificationsAvailable = true;
-    return Notifications;
+    moduleChecked = true;
+    return notificationsModule;
   } catch (error) {
-    notificationsAvailable = false;
+    console.warn('expo-notifications not available:', error.message);
+    moduleChecked = true;
     return null;
   }
 }
 
 export async function requestNotificationPermissions(): Promise<boolean> {
   if (Platform.OS === 'web') {
+    return false;
+  }
+
+  if (isExpoGo()) {
+    Alert.alert(
+      'Notifications',
+      'Notifications require a development build. Currently using alerts as reminders.',
+      [{ text: 'OK' }]
+    );
     return false;
   }
 
@@ -57,9 +77,13 @@ export async function scheduleNotification(
   date: Date,
   notificationId?: string
 ): Promise<string | null> {
+  if (isExpoGo()) {
+    Alert.alert(title, body, [{ text: 'OK' }]);
+    return null;
+  }
+
   const module = await getNotificationsModule();
   if (!module) {
-    // Fallback to Alert
     Alert.alert(title, body, [{ text: 'OK' }]);
     return null;
   }
@@ -77,7 +101,6 @@ export async function scheduleNotification(
     });
     return id;
   } catch (error) {
-    // Fallback to Alert
     Alert.alert(title, body, [{ text: 'OK' }]);
     return null;
   }
@@ -105,7 +128,6 @@ export async function scheduleDateNotification(
   const isPast = triggerDate <= now;
 
   if (isPast) {
-    // Schedule is in the past, show immediate reminder
     Alert.alert(
       title,
       `${body}\n\nDate: ${displayDate}\nTime: ${formatTime(time)}\n\nThis schedule has already passed.`,
@@ -114,9 +136,7 @@ export async function scheduleDateNotification(
     return null;
   }
 
-  const module = await getNotificationsModule();
-  if (!module) {
-    // Fallback to Alert with timing info
+  if (isExpoGo()) {
     const timeUntil = triggerDate.getTime() - now.getTime();
     const hoursUntil = Math.floor(timeUntil / (1000 * 60 * 60));
     const minutesUntil = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
@@ -124,7 +144,17 @@ export async function scheduleDateNotification(
 
     Alert.alert(
       'Schedule Set',
-      `${title}\n\n${displayDate} at ${formatTime(time)}\n\nReminder in ${timeMessage}`,
+      `${title}\n\n${displayDate} at ${formatTime(time)}\n\nReminder in ${timeMessage}\n\nNote: Real notifications require a development build.`,
+      [{ text: 'OK' }]
+    );
+    return null;
+  }
+
+  const module = await getNotificationsModule();
+  if (!module) {
+    Alert.alert(
+      'Schedule Set',
+      `${title}\n\n${displayDate} at ${formatTime(time)}`,
       [{ text: 'OK' }]
     );
     return null;
@@ -143,7 +173,6 @@ export async function scheduleDateNotification(
     });
     return id;
   } catch (error) {
-    // Fallback to Alert
     Alert.alert(
       'Schedule Set',
       `${title}\n\n${displayDate} at ${formatTime(time)}`,
@@ -154,6 +183,8 @@ export async function scheduleDateNotification(
 }
 
 export async function cancelNotification(notificationId: string): Promise<void> {
+  if (isExpoGo()) return;
+
   const module = await getNotificationsModule();
   if (!module) return;
 
@@ -165,6 +196,8 @@ export async function cancelNotification(notificationId: string): Promise<void> 
 }
 
 export async function cancelAllNotifications(): Promise<void> {
+  if (isExpoGo()) return;
+
   const module = await getNotificationsModule();
   if (!module) return;
 
@@ -176,6 +209,8 @@ export async function cancelAllNotifications(): Promise<void> {
 }
 
 export async function getAllScheduledNotifications(): Promise<any[]> {
+  if (isExpoGo()) return [];
+
   const module = await getNotificationsModule();
   if (!module) return [];
 
